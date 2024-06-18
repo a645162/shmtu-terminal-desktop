@@ -1,10 +1,10 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using shmtu_terminal_desktop.ViewModels;
-using shmtu_terminal_desktop.Views;
+using shmtu.terminal.desktop.ViewModels;
+using shmtu.terminal.desktop.Views;
 
-namespace shmtu_terminal_desktop;
+namespace shmtu.terminal.desktop;
 
 public class App : Application
 {

@@ -1,6 +1,6 @@
 ﻿using ReactiveUI;
 
-namespace shmtu_terminal_desktop.ViewModels;
+namespace shmtu.terminal.desktop.ViewModels;
 
 public class ViewModelBase : ReactiveObject
 {

@@ -1,9 +1,9 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using shmtu_terminal_desktop.ViewModels;
+using shmtu.terminal.desktop.ViewModels;
 
-namespace shmtu_terminal_desktop;
+namespace shmtu.terminal.desktop;
 
 public class ViewLocator : IDataTemplate
 {

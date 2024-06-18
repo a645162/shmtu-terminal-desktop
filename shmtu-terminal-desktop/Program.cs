@@ -2,7 +2,7 @@
 using Avalonia;
 using Avalonia.ReactiveUI;
 
-namespace shmtu_terminal_desktop;
+namespace shmtu.terminal.desktop;
 
 internal sealed class Program
 {

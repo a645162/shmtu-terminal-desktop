@@ -6,11 +6,15 @@
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <RootNamespace>shmtu.terminal.desktop</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
         <Folder Include="Models\"/>
         <AvaloniaResource Include="Assets\**"/>
+        <Folder Include="ViewModels\MainWindow\" />
+        <Folder Include="Views\MainWindow\" />
+        <Folder Include="Views\User\" />
     </ItemGroup>
 
     <ItemGroup>
@@ -21,6 +25,7 @@
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.10"/>
         <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.10"/>
-        <PackageReference Include="shmtu-dotnet-lib" Version="1.0.0.2"/>
+        <PackageReference Include="shmtu-dotnet-lib" Version="1.0.0.3" />
+        <PackageReference Include="SqlSugarCore" Version="5.1.4.157" />
     </ItemGroup>
 </Project>

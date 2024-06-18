@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace shmtu_terminal_desktop.Views;
+namespace shmtu.terminal.desktop.Views;
 
 public partial class MainWindow : Window
 {
