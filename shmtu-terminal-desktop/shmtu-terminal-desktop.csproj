@@ -11,18 +11,22 @@
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\**"/>
-        <Folder Include="Views\MainWindow\" />
+        <Folder Include="Views\MainWindow\"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="11.0.10"/>
-        <PackageReference Include="Avalonia.Desktop" Version="11.0.10"/>
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.10"/>
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.10"/>
+        <PackageReference Include="Avalonia" Version="11.1.0-rc2"/>
+        <PackageReference Include="Avalonia.Desktop" Version="11.1.0-rc2"/>
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.1.0-rc2"/>
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.1.0-rc2"/>
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.10"/>
-        <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.10"/>
-        <PackageReference Include="shmtu-dotnet-lib" Version="1.0.0.3" />
-        <PackageReference Include="SqlSugarCore" Version="5.1.4.157" />
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.1.0-rc2"/>
+        <PackageReference Include="Avalonia.ReactiveUI" Version="11.1.0-rc2"/>
+        <!--<PackageReference Include="shmtu-dotnet-lib" Version="1.0.0.3" />-->
+        <PackageReference Include="SqlSugarCore" Version="5.1.4.166"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\shmtu-dotnet-lib\shmtu-dotnet-lib\shmtu-dotnet-lib.csproj"/>
     </ItemGroup>
 </Project>
