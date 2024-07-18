@@ -28,6 +28,37 @@ public class AccountModel
         };
     }
 
+    public static AccountModel GenerateRandomAccount()
+    {
+        return new AccountModel
+        {
+            AccountId = "202312312345",
+            Name = "Test User",
+            Password = "123456"
+        };
+    }
+
+    public bool CheckIsHaveError()
+    {
+        if (string.IsNullOrEmpty(AccountId))
+        {
+            return true;
+        }
+
+        // 202312312345
+        if (AccountId.Length != 12)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool IsCorrect()
+    {
+        return !CheckIsHaveError();
+    }
+
     public bool CheckIsExpired()
     {
         return DateTime.Now > ExpireDate;

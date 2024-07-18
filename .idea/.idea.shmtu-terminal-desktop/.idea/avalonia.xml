@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AvaloniaProject">
+    <option name="projectPerEditor">
+      <map>
+        <entry key="shmtu-terminal-desktop/Views/Component/CountDown/CountDownWeekUserControl.axaml" value="shmtu-terminal-desktop/shmtu-terminal-desktop.csproj" />
+        <entry key="shmtu-terminal-desktop/Views/MainWindow.axaml" value="shmtu-terminal-desktop/shmtu-terminal-desktop.csproj" />
+        <entry key="shmtu-terminal-desktop/Views/MainWindow/SummaryUserControl.axaml" value="shmtu-terminal-desktop/shmtu-terminal-desktop.csproj" />
+        <entry key="shmtu-terminal-desktop/Views/MainWindowComponent/SummaryUserControl.axaml" value="shmtu-terminal-desktop/shmtu-terminal-desktop.csproj" />
+        <entry key="shmtu-terminal-desktop/Views/User/AccountManagerWindow.axaml" value="shmtu-terminal-desktop/shmtu-terminal-desktop.csproj" />
+        <entry key="shmtu-terminal-desktop/Views/User/UserManagerWindow.axaml" value="shmtu-terminal-desktop/shmtu-terminal-desktop.csproj" />
+      </map>
+    </option>
+  </component>
+</project>

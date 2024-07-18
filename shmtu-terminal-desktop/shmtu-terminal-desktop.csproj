@@ -11,7 +11,6 @@
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\**"/>
-        <Folder Include="Views\MainWindow\"/>
     </ItemGroup>
 
     <ItemGroup>

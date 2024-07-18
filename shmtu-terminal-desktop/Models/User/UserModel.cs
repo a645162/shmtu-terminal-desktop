@@ -1,15 +1,36 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace shmtu.terminal.desktop.Models.User;
 
 public class UserModel
 {
+    public bool Enable = true;
+
     public string Name = "";
 
-    public int BirthYear = 0;
-    public int BirthMonth = 0;
-    public int BirthDay = 0;
+    public bool EnableUpdate = true;
 
-    public List<string> AccountIdList = [];
+    public DateTime BirthDay = DateTime.MinValue;
+
     public List<AccountModel> AccountList = [];
+
+    public void GenerateRandomAccount(int count = 1)
+    {
+        for (var i = 0; i < count; i++)
+        {
+            AccountList.Add(AccountModel.GenerateRandomAccount());
+        }
+    }
+
+    public static UserModel GenerateRandomUser()
+    {
+        var user = new UserModel
+        {
+            Name = "Test User",
+            BirthDay = DateTime.Now
+        };
+        user.GenerateRandomAccount(3);
+        return user;
+    }
 }

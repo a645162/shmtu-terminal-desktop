@@ -15,8 +15,19 @@
     </Design.DataContext>
 
     <Grid>
-        <Label>Welcome to Avalonia!</Label>
+        <StackPanel>
+            <Label>Welcome to Avalonia!</Label>
+            
+            <StackPanel
+                Orientation="Horizontal"
+                Margin="10">
+                <Label VerticalAlignment="Center">名称:</Label>
+                <TextBox Name="TextBoxAccountName"
+                         MinWidth="200"
+                         Text="" />
+            </StackPanel>
 
+        </StackPanel>
     </Grid>
 
 </Window>
