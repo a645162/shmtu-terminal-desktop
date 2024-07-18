@@ -1,0 +1,62 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:user="clr-namespace:shmtu.terminal.desktop.ViewModels.User"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="shmtu.terminal.desktop.Views.User.AccountManagerWindow"
+        x:DataType="user:AccountManagerViewModel"
+        Title="账户设置">
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <user:AccountManagerViewModel />
+    </Design.DataContext>
+
+    <Grid>
+        <!-- Main Liner Layout -->
+        <StackPanel>
+
+            <Label
+                Content="{Binding Greeting}">
+            </Label>
+
+            <StackPanel
+                Orientation="Horizontal"
+                Margin="10">
+                <Label VerticalAlignment="Center">名称:</Label>
+                <TextBox Name="TextBoxAccountName"
+                         MinWidth="200"
+                         Text="{Binding AccountName}" />
+            </StackPanel>
+
+            <StackPanel
+                Orientation="Horizontal"
+                Margin="10">
+                <Label VerticalAlignment="Center">学号:</Label>
+                <TextBox Name="TextBoxAccountId"
+                         MinWidth="200"
+                         Text="{Binding AccountId}" />
+            </StackPanel>
+
+            <StackPanel
+                Orientation="Horizontal"
+                Margin="10">
+                <Label VerticalAlignment="Center">密码:</Label>
+                <TextBox Name="TextBoxPassword"
+                         MinWidth="200"
+                         Text="{Binding AccountPassword}" />
+            </StackPanel>
+
+            <StackPanel
+                Orientation="Horizontal"
+                Margin="10">
+                <Button>保存</Button>
+            </StackPanel>
+
+        </StackPanel>
+
+    </Grid>
+
+</Window>

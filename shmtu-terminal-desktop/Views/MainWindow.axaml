@@ -15,6 +15,21 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+    <Grid>
+        <StackPanel
+            Name="PanelDebugWindowsList">
+            <TextBlock
+                Text="{Binding Greeting}"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center" />
+
+            <Button
+                Content="User Manager"
+                Click="ButtonUserManager_OnClick" />
+            <Button
+                Content="Account Manager"
+                Click="ButtonAccountManager_OnClick" />
+        </StackPanel>
+    </Grid>
 
 </Window>
