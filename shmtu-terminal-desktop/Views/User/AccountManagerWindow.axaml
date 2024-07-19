@@ -6,7 +6,9 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="shmtu.terminal.desktop.Views.User.AccountManagerWindow"
         x:DataType="user:AccountManagerViewModel"
-        Title="账户设置">
+        Title="账户设置"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,

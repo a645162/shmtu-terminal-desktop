@@ -21,11 +21,15 @@
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.1.0-rc2"/>
         <PackageReference Include="Avalonia.ReactiveUI" Version="11.1.0-rc2"/>
+        <PackageReference Include="Material.Avalonia" Version="3.6.1-nightly.0.3" />
+        <PackageReference Include="Material.Avalonia.DataGrid" Version="3.6.1-nightly.0.3" />
+        <PackageReference Include="Material.Avalonia.Dialogs" Version="3.6.1-nightly.0.3" />
         <!--<PackageReference Include="shmtu-dotnet-lib" Version="1.0.0.3" />-->
         <PackageReference Include="SqlSugarCore" Version="5.1.4.166"/>
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Lib\Captcha\shmtu-captcha-onnx-lib\shmtu-captcha-onnx-lib.csproj" />
         <ProjectReference Include="..\shmtu-dotnet-lib\shmtu-dotnet-lib\shmtu-dotnet-lib.csproj"/>
     </ItemGroup>
 </Project>

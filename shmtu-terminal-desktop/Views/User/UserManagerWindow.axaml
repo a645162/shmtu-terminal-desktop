@@ -6,7 +6,9 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="shmtu.terminal.desktop.Views.User.UserManagerWindow"
         x:DataType="user:UserManagerViewModel"
-        Title="用户身份管理">
+        Title="用户身份管理"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
@@ -17,7 +19,7 @@
     <Grid>
         <StackPanel>
             <Label>Welcome to Avalonia!</Label>
-            
+
             <StackPanel
                 Orientation="Horizontal"
                 Margin="10">

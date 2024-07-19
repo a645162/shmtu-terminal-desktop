@@ -14,6 +14,8 @@ public class AccountModel
 
     // Account Expire Date
     public DateTime ExpireDate = DateTime.MaxValue;
+    
+    public DateTime LastUpdateTime = DateTime.MinValue;
 
     public AccountModel Clone()
     {
