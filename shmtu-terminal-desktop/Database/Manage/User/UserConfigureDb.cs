@@ -6,7 +6,7 @@ using SqlSugar;
 
 namespace shmtu.terminal.desktop.Database.Manage.User;
 
-public class UserConfigureDb
+public static class UserConfigureDb
 {
     private static SqlSugarClient GetDbSource()
     {

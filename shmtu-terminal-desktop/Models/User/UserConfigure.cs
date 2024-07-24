@@ -6,7 +6,7 @@ namespace shmtu.terminal.desktop.Models.User;
 
 public class UserConfigure
 {
-    public static List<UserConfigure> UserConfigureList = [];
+    public static readonly List<UserConfigure> UserConfigureList = [];
 
     public bool Enable { get; set; } = true;
 

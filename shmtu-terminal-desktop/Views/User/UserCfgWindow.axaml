@@ -1,0 +1,87 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:user="clr-namespace:shmtu.terminal.desktop.ViewModels.User"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="shmtu.terminal.desktop.Views.User.UserCfgWindow"
+        x:DataType="user:UserCfgViewModel"
+        Title="用户身份管理"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent">
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <user:UserCfgViewModel />
+    </Design.DataContext>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- 用户身份列表 -->
+        <DockPanel
+            LastChildFill="True">
+
+            <!-- 工具按钮 -->
+            <StackPanel
+                Orientation="Horizontal"
+                DockPanel.Dock="Bottom">
+                <Button Click="Button_User_Add_OnClick">+</Button>
+                <Button>-</Button>
+                <Button Click="Button_Save_OnClick">保存</Button>
+            </StackPanel>
+
+            <StackPanel
+                Orientation="Vertical"
+                DockPanel.Dock="Top">
+
+                <Label>
+                    用户身份:
+                </Label>
+
+                <ListBox
+                    Name="ListBoxUserList"
+                    ItemsSource="{Binding UserNameList}"
+                    MinWidth="300">
+                </ListBox>
+            </StackPanel>
+
+        </DockPanel>
+
+        <!-- 用户身份详情 -->
+        <StackPanel
+            Grid.Column="1">
+
+            <CheckBox>启用</CheckBox>
+
+            <StackPanel
+                Orientation="Horizontal"
+                Margin="10">
+                <Label VerticalAlignment="Center">名称:</Label>
+                <TextBox Name="TextBoxAccountName"
+                         MinWidth="200"
+                         Text="" />
+            </StackPanel>
+
+            <StackPanel
+                Orientation="Horizontal"
+                Margin="10">
+                <Label VerticalAlignment="Center">生日:</Label>
+            </StackPanel>
+
+            <CheckBox>允许更新</CheckBox>
+
+            <Label>校园卡账户列表</Label>
+            <ListBox>
+                <ListBoxItem>校园卡账户1</ListBoxItem>
+                <ListBoxItem>校园卡账户2</ListBoxItem>
+            </ListBox>
+
+        </StackPanel>
+    </Grid>
+
+</Window>

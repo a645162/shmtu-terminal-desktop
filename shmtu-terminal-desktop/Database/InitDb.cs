@@ -9,7 +9,7 @@ public static class InitDb
     {
         // Create Directory
 
-        var dirPath = "./Data/";
+        const string dirPath = "./Data/";
         if (!Directory.Exists(dirPath))
         {
             Directory.CreateDirectory(dirPath);

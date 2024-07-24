@@ -25,7 +25,7 @@ public partial class MainWindow : Window
 
     private void ButtonUserManager_OnClick(object? sender, RoutedEventArgs e)
     {
-        var userManagerWindow = new User.UserManagerWindow
+        var userManagerWindow = new User.UserCfgWindow
         {
             DataContext = new AccountManagerViewModel()
         };
