@@ -1,21 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using SqlSugar;
 
 namespace shmtu.terminal.desktop.Models.User;
 
 public class UserConfigure
 {
     public static List<UserConfigure> UserConfigureList = [];
-    
-    public bool Enable = true;
 
-    public string Name = "";
+    public bool Enable { get; set; } = true;
 
-    public bool EnableUpdate = true;
+    [SugarColumn(IsPrimaryKey = true, IsIdentity = true)]
+    public int Id { get; set; }
 
-    public DateTime BirthDay = DateTime.MinValue;
+    [SugarColumn(IsNullable = false)] public string Name { get; set; } = "";
 
-    public List<AccountConfigure> AccountList = [];
+    public bool EnableUpdate { get; set; } = true;
+
+    public DateTime BirthDay { get; set; } = DateTime.MinValue;
+
+    public List<AccountConfigure> AccountList { get; set; } = [];
 
     public void GenerateRandomAccount(int count = 1)
     {

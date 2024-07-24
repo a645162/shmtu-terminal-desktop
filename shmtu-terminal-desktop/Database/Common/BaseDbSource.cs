@@ -10,7 +10,7 @@ namespace shmtu.terminal.desktop.Database.Common;
 /// </summary>
 public abstract class BaseDbSource
 {
-    public static readonly string DataDirectoryPath = "data";
+    public static readonly string DataDirectoryPath = "Data";
     private static readonly string DbExtension = "sqlite";
 
     /// <summary>
