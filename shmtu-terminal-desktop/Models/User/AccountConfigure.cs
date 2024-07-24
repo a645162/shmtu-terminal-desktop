@@ -2,7 +2,7 @@
 
 namespace shmtu.terminal.desktop.Models.User;
 
-public class AccountModel
+public class AccountConfigure
 {
     public bool Enable = true;
 
@@ -17,9 +17,9 @@ public class AccountModel
     
     public DateTime LastUpdateTime = DateTime.MinValue;
 
-    public AccountModel Clone()
+    public AccountConfigure Clone()
     {
-        return new AccountModel
+        return new AccountConfigure
         {
             Enable = Enable,
             AccountId = AccountId,
@@ -30,9 +30,9 @@ public class AccountModel
         };
     }
 
-    public static AccountModel GenerateRandomAccount()
+    public static AccountConfigure GenerateRandomAccount()
     {
-        return new AccountModel
+        return new AccountConfigure
         {
             AccountId = "202312312345",
             Name = "Test User",

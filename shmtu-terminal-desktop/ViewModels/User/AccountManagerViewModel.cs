@@ -6,35 +6,35 @@ public class AccountManagerViewModel : ViewModelBase
 {
     public string Greeting { get; set; } = "Welcome to Avalonia!";
 
-    private readonly AccountModel _account;
+    private readonly AccountConfigure _accountConfigure;
 
     public AccountManagerViewModel()
     {
-        _account = new AccountModel();
+        _accountConfigure = new AccountConfigure();
     }
 
-    public AccountManagerViewModel(AccountModel account)
+    public AccountManagerViewModel(AccountConfigure accountConfigure)
     {
         Greeting = "Greeting from AccountManagerViewModel";
 
-        _account = account;
+        _accountConfigure = accountConfigure;
     }
 
     public string AccountId
     {
-        get => _account.AccountId;
-        set => _account.AccountId = value;
+        get => _accountConfigure.AccountId;
+        set => _accountConfigure.AccountId = value;
     }
 
     public string AccountName
     {
-        get => _account.Name;
-        set => _account.Name = value;
+        get => _accountConfigure.Name;
+        set => _accountConfigure.Name = value;
     }
 
     public string AccountPassword
     {
-        get => _account.Password;
-        set => _account.Password = value;
+        get => _accountConfigure.Password;
+        set => _accountConfigure.Password = value;
     }
 }

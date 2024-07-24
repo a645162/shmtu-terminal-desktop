@@ -3,8 +3,10 @@ using System.Collections.Generic;
 
 namespace shmtu.terminal.desktop.Models.User;
 
-public class UserModel
+public class UserConfigure
 {
+    public static List<UserConfigure> UserConfigureList = [];
+    
     public bool Enable = true;
 
     public string Name = "";
@@ -13,19 +15,19 @@ public class UserModel
 
     public DateTime BirthDay = DateTime.MinValue;
 
-    public List<AccountModel> AccountList = [];
+    public List<AccountConfigure> AccountList = [];
 
     public void GenerateRandomAccount(int count = 1)
     {
         for (var i = 0; i < count; i++)
         {
-            AccountList.Add(AccountModel.GenerateRandomAccount());
+            AccountList.Add(AccountConfigure.GenerateRandomAccount());
         }
     }
 
-    public static UserModel GenerateRandomUser()
+    public static UserConfigure GenerateRandomUser()
     {
-        var user = new UserModel
+        var user = new UserConfigure
         {
             Name = "Test User",
             BirthDay = DateTime.Now

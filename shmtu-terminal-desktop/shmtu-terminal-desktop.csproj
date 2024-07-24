@@ -32,4 +32,10 @@
         <ProjectReference Include="..\Lib\Captcha\shmtu-captcha-onnx-lib\shmtu-captcha-onnx-lib.csproj" />
         <ProjectReference Include="..\shmtu-dotnet-lib\shmtu-dotnet-lib\shmtu-dotnet-lib.csproj"/>
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Database\Data\Bill\" />
+      <Folder Include="Database\Data\User\" />
+      <Folder Include="Database\Manage\Bill\" />
+    </ItemGroup>
 </Project>

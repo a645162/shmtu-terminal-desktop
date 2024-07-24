@@ -34,7 +34,7 @@ public partial class MainWindow : Window
 
     private void ButtonAccountManager_OnClick(object? sender, RoutedEventArgs e)
     {
-        var accountTest = new AccountModel
+        var accountTest = new AccountConfigure
         {
             AccountId = "202312312345",
             Name = "Test User",
