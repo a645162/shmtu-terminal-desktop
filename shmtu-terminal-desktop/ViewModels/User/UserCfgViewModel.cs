@@ -13,7 +13,7 @@ public class UserCfgViewModel : ViewModelBase
         }
     }
 
-    private UserConfigure? _currentUserConfigure;
+    // private UserConfigure? _currentUserConfigure;
 
     public UserCfgViewModel()
     {

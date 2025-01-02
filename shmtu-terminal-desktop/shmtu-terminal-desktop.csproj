@@ -14,18 +14,18 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="11.1.0-rc2"/>
-        <PackageReference Include="Avalonia.Desktop" Version="11.1.0-rc2"/>
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.1.0-rc2"/>
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.1.0-rc2"/>
+        <PackageReference Include="Avalonia" Version="11.2.3" />
+        <PackageReference Include="Avalonia.Desktop" Version="11.2.3"/>
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.3"/>
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.3"/>
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.1.0-rc2"/>
-        <PackageReference Include="Avalonia.ReactiveUI" Version="11.1.0-rc2"/>
-        <PackageReference Include="Material.Avalonia" Version="3.6.1-nightly.0.3" />
-        <PackageReference Include="Material.Avalonia.DataGrid" Version="3.6.1-nightly.0.3" />
-        <PackageReference Include="Material.Avalonia.Dialogs" Version="3.6.1-nightly.0.3" />
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.2.3"/>
+        <PackageReference Include="Avalonia.ReactiveUI" Version="11.2.3"/>
+        <PackageReference Include="Material.Avalonia" Version="3.9.1" />
+        <PackageReference Include="Material.Avalonia.DataGrid" Version="3.9.1" />
+        <PackageReference Include="Material.Avalonia.Dialogs" Version="3.9.1" />
         <!--<PackageReference Include="shmtu-dotnet-lib" Version="1.0.0.3" />-->
-        <PackageReference Include="SqlSugarCore" Version="5.1.4.166"/>
+        <PackageReference Include="SqlSugarCore" Version="5.1.4.172" />
     </ItemGroup>
 
     <ItemGroup>
