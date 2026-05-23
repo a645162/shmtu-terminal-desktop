@@ -1,3 +1,4 @@
+using System.Net;
 using shmtu.cas.auth;
 using shmtu.cas.auth.common;
 using shmtu.cas.captcha;
@@ -16,9 +17,6 @@ using System.Text.Json;
 
 namespace shmtu.terminal.desktop.Services.Sync;
 
-/// <summary>
-/// 同步进度信息
-/// </summary>
 public class SyncProgress
 {
     public string AccountId { get; set; } = "";
@@ -26,13 +24,10 @@ public class SyncProgress
     public int CurrentPage { get; set; }
     public int TotalPages { get; set; }
     public int NewCount { get; set; }
-    public string Status { get; set; } = ""; // logging_in, syncing, completed, failed
+    public string Status { get; set; } = "";
     public string? ErrorMessage { get; set; }
 }
 
-/// <summary>
-/// 同步结果汇总
-/// </summary>
 public class SyncSummary
 {
     public int TotalAccounts { get; set; }
@@ -42,9 +37,6 @@ public class SyncSummary
     public List<AccountSyncResult> AccountResults { get; set; } = [];
 }
 
-/// <summary>
-/// 单账号同步结果
-/// </summary>
 public class AccountSyncResult
 {
     public string AccountId { get; set; } = "";
@@ -53,60 +45,30 @@ public class AccountSyncResult
     public string? ErrorMessage { get; set; }
 }
 
-/// <summary>
-/// 账单同步服务 — 封装增量同步逻辑
-/// 支持单账户同步、身份级别同步、全量更新
-/// </summary>
 public class BillSyncService
 {
     private readonly AppConfig _appConfig;
 
-    public BillSyncService()
-    {
-        _appConfig = TomlConfigService.LoadAppConfig();
-    }
+    public BillSyncService() => _appConfig = TomlConfigService.LoadAppConfig();
 
-    /// <summary>
-    /// 同步进度变化事件
-    /// </summary>
     public event Action<SyncProgress>? ProgressChanged;
 
-    /// <summary>
-    /// 单账号增量同步
-    /// </summary>
     public async Task<AccountSyncResult> SyncAccountAsync(
         AccountInfo account,
         ICaptchaResolver captchaResolver,
         CancellationToken cancellationToken = default)
     {
         if (!account.Enable || !account.EnableUpdate)
-        {
-            return new AccountSyncResult
-            {
-                AccountId = account.AccountId,
-                Success = true,
-                NewCount = 0,
-            };
-        }
+            return new AccountSyncResult { AccountId = account.AccountId, Success = true, NewCount = 0 };
 
         try
         {
-            // 获取解密后的密码
             var password = AccountDb.GetDecryptedPassword(account.Id);
-
-            // 确保账号数据库已初始化
             InitDb.InitAccountDb(account.AccountId);
-
-            // 确保身份数据库已初始化
             InitDb.InitIdentityDb(account.IdentityId);
-
-            // 创建 BillStore 实现
             var store = new DatabaseBillStore(account.AccountId, account.IdentityId);
-
-            // 尝试恢复或创建 EpayAuth
             using var epayAuth = await CreateEpayAuthAsync(account.AccountId, password, captchaResolver, cancellationToken);
 
-            // 创建同步选项
             var syncOptions = new SyncOptions
             {
                 StartPage = 1,
@@ -115,37 +77,18 @@ public class BillSyncService
                 EarlyStopThreshold = _appConfig.Sync.EarlyStopThreshold,
             };
 
-            // 执行增量同步
-            var syncResult = await BillSync.IncrementalSyncAsync(
-                epayAuth, store, syncOptions, cancellationToken);
-
-            // 保存会话 cookies
+            var syncResult = await BillSync.IncrementalSyncAsync(epayAuth, store, syncOptions, cancellationToken);
             await SaveSessionAsync(epayAuth, account.AccountId);
-
-            // 更新最后同步时间
             AccountDb.UpdateLastSyncTime(account.Id);
 
-            return new AccountSyncResult
-            {
-                AccountId = account.AccountId,
-                Success = true,
-                NewCount = syncResult.NewCount,
-            };
+            return new AccountSyncResult { AccountId = account.AccountId, Success = true, NewCount = syncResult.NewCount };
         }
         catch (Exception ex)
         {
-            return new AccountSyncResult
-            {
-                AccountId = account.AccountId,
-                Success = false,
-                ErrorMessage = ex.Message,
-            };
+            return new AccountSyncResult { AccountId = account.AccountId, Success = false, ErrorMessage = ex.Message };
         }
     }
 
-    /// <summary>
-    /// 身份级别增量同步 — 遍历身份下所有启用账号
-    /// </summary>
     public async Task<SyncSummary> SyncIdentityAsync(
         int identityId,
         ICaptchaResolver captchaResolver,
@@ -155,90 +98,52 @@ public class BillSyncService
         return await SyncAccountsAsync(accounts, captchaResolver, cancellationToken);
     }
 
-    /// <summary>
-    /// 单账号全量更新
-    /// </summary>
     public async Task<AccountSyncResult> FullUpdateAccountAsync(
         AccountInfo account,
         ICaptchaResolver captchaResolver,
         CancellationToken cancellationToken = default)
     {
-        if (!account.Enable) return new AccountSyncResult { AccountId = account.AccountId };
+        if (!account.Enable)
+            return new AccountSyncResult { AccountId = account.AccountId };
 
         try
         {
             var password = AccountDb.GetDecryptedPassword(account.Id);
             InitDb.InitAccountDb(account.AccountId);
             InitDb.InitIdentityDb(account.IdentityId);
-
             var store = new DatabaseBillStore(account.AccountId, account.IdentityId);
             using var epayAuth = await CreateEpayAuthAsync(account.AccountId, password, captchaResolver, cancellationToken);
 
-            // 全量同步 — 不提前停止
             var syncOptions = new SyncOptions
             {
-                StartPage = 1,
-                MaxPages = _appConfig.Sync.MaxPages,
-                BillType = BillType.All,
-                EarlyStopThreshold = int.MaxValue, // 不提前停止
+                StartPage = 1, MaxPages = _appConfig.Sync.MaxPages,
+                BillType = BillType.All, EarlyStopThreshold = int.MaxValue,
             };
 
-            var syncResult = await BillSync.IncrementalSyncAsync(
-                epayAuth, store, syncOptions, cancellationToken);
-
-            // 全量更新后清空该账号的操作日志
+            var syncResult = await BillSync.IncrementalSyncAsync(epayAuth, store, syncOptions, cancellationToken);
             OperationLogDb.ClearByAccountId(account.IdentityId, account.AccountId);
-
             await SaveSessionAsync(epayAuth, account.AccountId);
             AccountDb.UpdateLastSyncTime(account.Id);
 
-            return new AccountSyncResult
-            {
-                AccountId = account.AccountId,
-                Success = true,
-                NewCount = syncResult.NewCount,
-            };
+            return new AccountSyncResult { AccountId = account.AccountId, Success = true, NewCount = syncResult.NewCount };
         }
         catch (Exception ex)
         {
-            return new AccountSyncResult
-            {
-                AccountId = account.AccountId,
-                Success = false,
-                ErrorMessage = ex.Message,
-            };
+            return new AccountSyncResult { AccountId = account.AccountId, Success = false, ErrorMessage = ex.Message };
         }
     }
 
-    /// <summary>
-    /// 身份级别全量更新
-    /// </summary>
-    public async Task<SyncSummary> FullUpdateIdentityAsync(
-        int identityId,
-        ICaptchaResolver captchaResolver,
-        CancellationToken cancellationToken = default)
+    public async Task<SyncSummary> FullUpdateIdentityAsync(int identityId, ICaptchaResolver captchaResolver, CancellationToken cancellationToken = default)
     {
         var accounts = AccountDb.GetEnabledByIdentityId(identityId);
         var summary = await SyncAccountsAsync(accounts, captchaResolver, cancellationToken);
-
-        // 全量更新后清空该身份所有操作日志
         OperationLogDb.ClearAll(identityId);
-
         return summary;
     }
 
-    /// <summary>
-    /// 批量同步多个账号
-    /// </summary>
-    private async Task<SyncSummary> SyncAccountsAsync(
-        List<AccountInfo> accounts,
-        ICaptchaResolver captchaResolver,
-        CancellationToken cancellationToken)
+    private async Task<SyncSummary> SyncAccountsAsync(List<AccountInfo> accounts, ICaptchaResolver captchaResolver, CancellationToken cancellationToken)
     {
-        var summary = new SyncSummary
-        {
-            TotalAccounts = accounts.Count,
-        };
+        var summary = new SyncSummary { TotalAccounts = accounts.Count };
 
         foreach (var account in accounts)
         {
@@ -253,15 +158,8 @@ public class BillSyncService
 
             var result = await SyncAccountAsync(account, captchaResolver, cancellationToken);
 
-            if (result.Success)
-            {
-                summary.SuccessCount++;
-                summary.TotalNewBills += result.NewCount;
-            }
-            else
-            {
-                summary.FailedCount++;
-            }
+            if (result.Success) { summary.SuccessCount++; summary.TotalNewBills += result.NewCount; }
+            else summary.FailedCount++;
 
             summary.AccountResults.Add(result);
 
@@ -274,12 +172,11 @@ public class BillSyncService
                 ErrorMessage = result.ErrorMessage,
             });
         }
-
         return summary;
     }
 
     /// <summary>
-    /// 创建或恢复 EpayAuth 实例
+    /// CRITICAL 3 fix: 从 SessionInfoDb 获取 cookies 并注入到 CasHttpClient 的 CookieContainer
     /// </summary>
     private async Task<EpayAuth> CreateEpayAuthAsync(
         string accountId,
@@ -287,40 +184,38 @@ public class BillSyncService
         ICaptchaResolver captchaResolver,
         CancellationToken cancellationToken)
     {
-        var epayAuth = new EpayAuth(captchaResolver);
+        var casClient = new CasHttpClient();
 
-        // 尝试恢复会话
-        var savedCookies = SessionInfoDb.GetDecryptedCookies(accountId);
-        if (savedCookies != null)
+        // CRITICAL 3: 从 CookieContainer 注入会话
+        var savedCookiesStr = SessionInfoDb.GetDecryptedCookies(accountId);
+        if (!string.IsNullOrEmpty(savedCookiesStr))
         {
-            // 测试会话是否仍然有效
-            try
-            {
-                var probeResult = await epayAuth.ProbeLoginAsync(cancellationToken);
-                if (probeResult is LoginProbe.AlreadyLoggedIn)
-                {
-                    return epayAuth;
-                }
-            }
-            catch
-            {
-                // 探测失败，继续登录流程
-            }
-
-            SessionInfoDb.Invalidate(accountId);
+            RestoreCookiesToContainer(casClient.CookieContainer, savedCookiesStr, "ecard.shmtu.edu.cn");
         }
 
-        // 需要重新登录
-        var loginResult = await epayAuth.SubmitLoginAsync(accountId, password, cancellationToken);
-        if (loginResult is not LoginSubmitResult.Success)
+        var epayAuth = new EpayAuth(captchaResolver, casClient);
+
+        // 尝试使用已有会话
+        try
         {
-            var errorMsg = loginResult switch
+            var probe = await epayAuth.ProbeLoginAsync(cancellationToken);
+            if (probe is LoginProbe.AlreadyLoggedIn)
+                return epayAuth;
+        }
+        catch { /* 探测失败，继续登录流程 */ }
+
+        // 需要登录
+        var result = await epayAuth.SubmitLoginAsync(accountId, password, cancellationToken);
+        if (result is not LoginSubmitResult.Success)
+        {
+            var errorMsg = result switch
             {
                 LoginSubmitResult.PasswordError => "密码错误",
                 LoginSubmitResult.ValidateCodeError => "验证码错误",
                 LoginSubmitResult.Failure f => f.Message,
                 _ => "登录失败",
             };
+            epayAuth.Dispose();
             throw new InvalidOperationException($"CAS登录失败: {errorMsg}");
         }
 
@@ -328,36 +223,60 @@ public class BillSyncService
     }
 
     /// <summary>
-    /// 保存会话信息
+    /// CRITICAL 3: 将 cookies 字符串解析并注入到 CookieContainer
+    /// 格式: name=value;name=value;...
+    /// </summary>
+    private static void RestoreCookiesToContainer(CookieContainer container, string cookiesStr, string domain)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(cookiesStr)) return;
+            var cookies = cookiesStr.Split(';', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var cookiePair in cookies)
+            {
+                var parts = cookiePair.Split('=', 2);
+                if (parts.Length < 2) continue;
+                var name = parts[0].Trim();
+                var value = parts[1].Trim();
+                if (string.IsNullOrEmpty(name)) continue;
+                container.Add(new Cookie(name, value) { Domain = domain });
+            }
+        }
+        catch { /* 忽略解析错误 */ }
+    }
+
+    /// <summary>
+    /// CRITICAL 3 fix: 从 CookieContainer 提取 cookies 并保存（不是 DefaultRequestHeaders）
     /// </summary>
     private static async Task SaveSessionAsync(EpayAuth epayAuth, string accountId)
     {
         try
         {
-            var isLoggedIn = await epayAuth.TestLoginStatusAsync();
-            if (isLoggedIn)
+            if (await epayAuth.TestLoginStatusAsync())
             {
-                // 获取 cookies 字符串
-                var cookiesStr = epayAuth.HttpClient.HttpClient.DefaultRequestHeaders
-                    .ToString();
-
-                SessionInfoDb.Save(accountId, cookiesStr);
+                var cookies = DumpCookiesFromContainer(epayAuth.HttpClient.CookieContainer, "ecard.shmtu.edu.cn");
+                if (!string.IsNullOrEmpty(cookies))
+                    SessionInfoDb.Save(accountId, cookies);
             }
         }
-        catch
-        {
-            // 保存会话失败不影响同步结果
-        }
+        catch { /* 保存失败不影响同步 */ }
     }
 
-    private void OnProgressChanged(SyncProgress progress)
+    private static string DumpCookiesFromContainer(CookieContainer container, string domain)
     {
-        ProgressChanged?.Invoke(progress);
+        try
+        {
+            var cookies = container.GetCookies(new Uri($"https://{domain}"));
+            var parts = new List<string>();
+            foreach (Cookie c in cookies)
+                parts.Add($"{c.Name}={c.Value}");
+            return string.Join("; ", parts);
+        }
+        catch { return ""; }
     }
 
-    /// <summary>
-    /// 数据库 BillStore 实现 — 供 shmtu-dotnet-lib 的 BillSync 使用
-    /// </summary>
+    private void OnProgressChanged(SyncProgress progress) => ProgressChanged?.Invoke(progress);
+
     private class DatabaseBillStore : IBillStore
     {
         private readonly string _accountId;
@@ -368,40 +287,24 @@ public class BillSyncService
         {
             _accountId = accountId;
             _identityId = identityId;
-
-            // 预加载已有交易号
-            var existingBills = BillOriginalDb.GetAll(accountId);
-            _existingNumbers = new HashSet<string>();
-            foreach (var bill in existingBills)
-            {
-                if (!string.IsNullOrEmpty(bill.Number))
-                    _existingNumbers.Add(bill.Number);
-            }
+            _existingNumbers = new HashSet<string>(
+                BillOriginalDb.GetAll(accountId)
+                    .Where(b => !string.IsNullOrEmpty(b.Number))
+                    .Select(b => b.Number!));
         }
 
-        public bool Contains(string number)
-        {
-            return _existingNumbers.Contains(number);
-        }
+        public bool Contains(string number) => _existingNumbers.Contains(number);
 
         public void Merge(List<BillItemInfo> newBills)
         {
             if (newBills.Count == 0) return;
 
-            var now = DateTime.Now.ToString("o");
-
-            // 写入账号原始数据表
             var originalRecords = newBills.Select(b => BillOriginalDb.FromBillItemInfo(b, _accountId)).ToList();
             BillOriginalDb.InsertRange(_accountId, originalRecords);
 
-            // 更新已有交易号缓存
             foreach (var bill in newBills)
-            {
-                if (!string.IsNullOrEmpty(bill.Number))
-                    _existingNumbers.Add(bill.Number);
-            }
+                if (!string.IsNullOrEmpty(bill.Number)) _existingNumbers.Add(bill.Number);
 
-            // 追加到身份合并数据表
             var mergedRecords = newBills.Select(b => BillMergedDb.FromBillItemInfo(b, _accountId)).ToList();
             BillMergedDb.AppendRange(_identityId, mergedRecords);
         }

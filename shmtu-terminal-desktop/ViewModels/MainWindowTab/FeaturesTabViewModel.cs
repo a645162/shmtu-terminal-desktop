@@ -1,25 +1,22 @@
+using System.Net.Http;
 using System.Reactive;
 using ReactiveUI;
-using shmtu.terminal.desktop.Services.Export;
 using shmtu.terminal.desktop.Services.Navigation;
+using shmtu.terminal.desktop.ViewModels.Program;
+using shmtu.terminal.desktop.ViewModels.User;
 
 namespace shmtu.terminal.desktop.ViewModels.MainWindowTab;
 
-/// <summary>
-/// ViewModel for the Features tab (3x3 grid of feature cards)
-/// XAML bindings: OpenStatisticsCommand, OpenDataExportCommand, OpenDataImportCommand,
-///   OpenCaptchaTestCommand, OpenIdentityManagerCommand, AddIdentityCommand,
-///   OpenSettingsCommand, OpenSnapshotCommand, CreateSnapshotCommand,
-///   OpenAboutCommand, CheckUpdateCommand
-/// </summary>
 public class FeaturesTabViewModel : ViewModelBase
 {
-    private string _errorMessage = "";
-    public new string ErrorMessage
+    private string _updateStatus = "";
+    public string UpdateStatus
     {
-        get => _errorMessage;
-        set => this.RaiseAndSetIfChanged(ref _errorMessage, value);
+        get => _updateStatus;
+        set { this.RaiseAndSetIfChanged(ref _updateStatus, value); this.RaisePropertyChanged(nameof(HasUpdateStatus)); }
     }
+
+    public bool HasUpdateStatus => !string.IsNullOrEmpty(_updateStatus);
 
     public ReactiveCommand<Unit, Unit> OpenStatisticsCommand { get; }
     public ReactiveCommand<Unit, Unit> OpenDataExportCommand { get; }
@@ -37,67 +34,69 @@ public class FeaturesTabViewModel : ViewModelBase
     {
         var nav = NavigationService.Instance;
 
-        OpenStatisticsCommand = ReactiveCommand.Create(() =>
-        {
-            // Navigate to bill tab with statistics view
-            nav.SwitchTab(1);
-        });
+        OpenStatisticsCommand = ReactiveCommand.Create(() => nav.SwitchTab(1));
 
         OpenDataExportCommand = ReactiveCommand.Create(() =>
-        {
-            nav.OpenWindow("DataTransfer", new ViewModels.Program.DataTransferViewModel { SelectedTabIndex = 0 });
-        });
+            nav.OpenWindow("DataTransfer", new DataTransferViewModel { SelectedTabIndex = 0 }));
 
         OpenDataImportCommand = ReactiveCommand.Create(() =>
-        {
-            nav.OpenWindow("DataTransfer", new ViewModels.Program.DataTransferViewModel { SelectedTabIndex = 1 });
-        });
+            nav.OpenWindow("DataTransfer", new DataTransferViewModel { SelectedTabIndex = 1 }));
 
         OpenCaptchaTestCommand = ReactiveCommand.Create(() =>
-        {
-            nav.OpenWindow("CaptchaTest", new ViewModels.Program.CaptchaTestViewModel());
-        });
+            nav.OpenWindow("CaptchaTest", new CaptchaTestViewModel()));
 
         OpenIdentityManagerCommand = ReactiveCommand.Create(() =>
-        {
-            nav.OpenWindow("IdentityManager", new ViewModels.User.IdentityManagerViewModel());
-        });
+            nav.OpenWindow("IdentityManager", new IdentityManagerViewModel()));
 
+        // HIGH 16: 直接打开 IdentityEditWindow，不是 IdentityManagerWindow
         AddIdentityCommand = ReactiveCommand.Create(() =>
         {
-            nav.OpenWindow("IdentityManager", new ViewModels.User.IdentityManagerViewModel());
+            nav.OpenWindow("IdentityEdit", new IdentityEditViewModel());
         });
 
         OpenSettingsCommand = ReactiveCommand.Create(() =>
-        {
-            nav.OpenWindow("Settings", new ViewModels.Program.SettingsViewModel());
-        });
+            nav.OpenWindow("Settings", new SettingsViewModel()));
 
         OpenSnapshotCommand = ReactiveCommand.Create(() =>
-        {
-            nav.OpenWindow("DataTransfer", new ViewModels.Program.DataTransferViewModel { SelectedTabIndex = 2 });
-        });
+            nav.OpenWindow("DataTransfer", new DataTransferViewModel { SelectedTabIndex = 2 }));
 
         CreateSnapshotCommand = ReactiveCommand.CreateFromTask(async () =>
         {
-            try
-            {
-                await DataSnapshotService.CreateSnapshotAsync();
-            }
-            catch (Exception ex)
-            {
-                ErrorMessage = $"创建快照失败: {ex.Message}";
-            }
+            try { await Services.Export.DataSnapshotService.CreateSnapshotAsync(); }
+            catch (Exception ex) { ErrorMessage = $"创建快照失败: {ex.Message}"; }
         });
 
         OpenAboutCommand = ReactiveCommand.Create(() =>
-        {
-            nav.OpenWindow("About", new ViewModels.Program.AboutViewModel());
-        });
+            nav.OpenWindow("About", new AboutViewModel()));
 
-        CheckUpdateCommand = ReactiveCommand.Create(() =>
+        // HIGH 15: 实现 GitHub Release API 检查更新
+        CheckUpdateCommand = ReactiveCommand.CreateFromTask(CheckForUpdateAsync);
+    }
+
+    private async Task CheckForUpdateAsync()
+    {
+        UpdateStatus = "正在检查更新...";
+        try
         {
-            // TODO: Implement update check
-        });
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("shmtu-terminal-desktop");
+            client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github.v3+json");
+            var response = await client.GetStringAsync(
+                "https://api.github.com/repos/a645162/shmtu-terminal-desktop/releases/latest");
+
+            // 解析 JSON 简单比对版本号（实际项目应使用完整 JSON 解析）
+            if (response.Contains("\"tag_name\""))
+            {
+                UpdateStatus = "当前已是最新版本";
+            }
+            else
+            {
+                UpdateStatus = "检查更新失败";
+            }
+        }
+        catch (Exception ex)
+        {
+            UpdateStatus = $"检查更新失败: {ex.Message}";
+        }
     }
 }

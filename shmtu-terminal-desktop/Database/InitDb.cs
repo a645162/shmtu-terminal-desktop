@@ -2,7 +2,6 @@ using System.IO;
 using shmtu.terminal.desktop.Database.Manage.Bill;
 using shmtu.terminal.desktop.Database.Manage.Identity;
 using shmtu.terminal.desktop.Database.Manage.Session;
-using shmtu.terminal.desktop.Database.Manage.User;
 
 namespace shmtu.terminal.desktop.Database;
 
@@ -17,7 +16,6 @@ public static class InitDb
         CreateDirectories();
 
         // 初始化主数据库表
-        UserConfigureDb.Init();
         IdentityDb.InitTable();
         AccountDb.InitTable();
 

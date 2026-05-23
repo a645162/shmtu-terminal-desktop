@@ -3,20 +3,15 @@ using System.Reactive;
 using ReactiveUI;
 using shmtu.terminal.desktop.Database;
 using shmtu.terminal.desktop.Database.Manage.Bill;
-using shmtu.terminal.desktop.Database.Manage.Identity;
 using shmtu.terminal.desktop.Models.Bill;
 using shmtu.terminal.desktop.Services.BillClassification;
 using shmtu.terminal.desktop.Services.Config;
+using shmtu.terminal.desktop.Services.Navigation;
 using shmtu.terminal.desktop.ViewModels.Component;
 using shmtu.terminal.desktop.ViewModels.Component.CountDown;
 
 namespace shmtu.terminal.desktop.ViewModels.MainWindowTab;
 
-/// <summary>
-/// ViewModel for the Home tab
-/// XAML bindings: TodaySpending, TodayComparison, MonthSpending, MonthComparison,
-///   MonthDeposit, CardBalance, ShowTrendDetailCommand, WeeklyTrendChart, CountdownViewModel
-/// </summary>
 public class HomeTabViewModel : ViewModelBase
 {
     private string _todaySpending = "0.00";
@@ -66,9 +61,6 @@ public class HomeTabViewModel : ViewModelBase
 
     public ReactiveCommand<Unit, Unit> ShowTrendDetailCommand { get; }
 
-    /// <summary>
-    /// Currently selected identity ID (set from MainWindowViewModel)
-    /// </summary>
     private int _identityId;
     public int IdentityId
     {
@@ -86,15 +78,14 @@ public class HomeTabViewModel : ViewModelBase
         CountdownViewModel = new CountDownWeekViewModel();
 
         ShowTrendDetailCommand = ReactiveCommand.Create(() =>
-        {
-            // Navigate to bill tab for detailed view
-            Services.Navigation.NavigationService.Instance.SwitchTab(1);
-        });
+            NavigationService.Instance.SwitchTab(1));
+
+        // HIGH 14: 订阅 ConfigureRequested，打开设置页面
+        CountdownViewModel.ConfigureRequested += () =>
+            NavigationService.Instance.OpenWindow("Settings",
+                new ViewModels.Program.SettingsViewModel { SelectedSettingsIndex = 4 });
     }
 
-    /// <summary>
-    /// Refresh all summary data from the database
-    /// </summary>
     public void RefreshData()
     {
         if (_identityId <= 0) return;
@@ -112,20 +103,16 @@ public class HomeTabViewModel : ViewModelBase
             var monthStart = ((DateTimeOffset)new DateTime(now.Year, now.Month, 1)).ToUnixTimeSeconds();
             var monthEnd = ((DateTimeOffset)today.AddDays(1)).ToUnixTimeSeconds();
 
-            // Today's spending
             var todaySummary = BillMergedDb.GetSummary(_identityId, todayStart, todayEnd);
             TodaySpending = FormatMoney(-todaySummary.totalExpense);
 
-            // Month's spending
             var monthSummary = BillMergedDb.GetSummary(_identityId, monthStart, monthEnd);
             MonthSpending = FormatMoney(-monthSummary.totalExpense);
             MonthDeposit = FormatMoney(monthSummary.totalIncome);
 
-            // Card balance: income - expense overall
             var totalSummary = BillMergedDb.GetSummary(_identityId);
             CardBalance = FormatMoney(totalSummary.totalIncome + totalSummary.totalExpense);
 
-            // Comparison with previous period
             var yesterdayStart = ((DateTimeOffset)today.AddDays(-1)).ToUnixTimeSeconds();
             var yesterdaySummary = BillMergedDb.GetSummary(_identityId, yesterdayStart, todayStart);
             var diff = -todaySummary.totalExpense - (-yesterdaySummary.totalExpense);
@@ -137,7 +124,6 @@ public class HomeTabViewModel : ViewModelBase
             var monthDiff = -monthSummary.totalExpense - (-lastMonthSummary.totalExpense);
             MonthComparison = monthDiff >= 0 ? $"较上月+{monthDiff:F2}" : $"较上月{monthDiff:F2}";
 
-            // Weekly trend chart
             UpdateWeeklyTrend();
         }
         catch (Exception ex)
@@ -160,17 +146,12 @@ public class HomeTabViewModel : ViewModelBase
             var date = today.AddDays(-i);
             var dayStart = ((DateTimeOffset)date).ToUnixTimeSeconds();
             var dayEnd = ((DateTimeOffset)date.AddDays(1)).ToUnixTimeSeconds();
-
             var summary = BillMergedDb.GetSummary(_identityId, dayStart, dayEnd);
-            var label = date.ToString("MM/dd");
-            data.Add((label, -summary.totalExpense));
+            data.Add((date.ToString("MM/dd"), -summary.totalExpense));
         }
 
         WeeklyTrendChart.UpdateData(data);
     }
 
-    private static string FormatMoney(double amount)
-    {
-        return $"{amount:F2}";
-    }
+    private static string FormatMoney(double amount) => $"{amount:F2}";
 }

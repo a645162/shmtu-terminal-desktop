@@ -1,20 +1,21 @@
 using System.Collections.ObjectModel;
 using System.Reactive;
-using System.Text;
+using Avalonia;
+using Avalonia.Platform.Storage;
+using Avalonia.Controls;
+using Avalonia.Platform.Storage;
+using Avalonia.Controls.ApplicationLifetimes;
 using ReactiveUI;
 using shmtu.terminal.desktop.Database;
 using shmtu.terminal.desktop.Database.Manage.Bill;
 using shmtu.terminal.desktop.Models.Bill;
 using shmtu.terminal.desktop.Services.BillClassification;
 using shmtu.terminal.desktop.Services.Config;
+using shmtu.terminal.desktop.Services.Navigation;
 using shmtu.terminal.desktop.ViewModels.Component.Bill;
 
 namespace shmtu.terminal.desktop.ViewModels.MainWindowTab;
 
-/// <summary>
-/// Display wrapper for BillMerged items in the DataGrid
-/// Adds computed properties like MoneyColor
-/// </summary>
 public class BillDisplayItem : ViewModelBase
 {
     public int Id { get; set; }
@@ -31,38 +32,35 @@ public class BillDisplayItem : ViewModelBase
     public string? NumberList { get; set; }
     public string? SourceAccountId { get; set; }
     public bool IsManual { get; set; }
+    public string? ClassificationType { get; set; }
 
     public static BillDisplayItem FromBillMerged(BillMerged bill, BillClassifier? classifier = null)
     {
         var money = bill.Money ?? 0;
+        var clsResult = classifier?.Classify(bill);
         return new BillDisplayItem
         {
             Id = bill.Id,
             DateTimeFormatted = bill.DateTimeFormatted,
-            ItemType = classifier != null
-                ? $"{bill.ItemType} ({classifier.Classify(bill).Type})"
+            ItemType = clsResult != null
+                ? $"{bill.ItemType} ({clsResult.Type})"
                 : bill.ItemType,
             Number = bill.Number,
             TargetUser = bill.TargetUser,
             MoneyStr = bill.MoneyStr,
             Money = bill.Money,
-            MoneyColor = money < 0 ? "#F44336" : "#4CAF50", // Red for expense, green for income
+            MoneyColor = money < 0 ? "#F44336" : "#4CAF50",
             Method = bill.Method,
             StatusStr = bill.StatusStr,
             IsCombined = bill.IsCombined,
             NumberList = bill.NumberList,
             SourceAccountId = bill.SourceAccountId,
             IsManual = bill.IsManual,
+            ClassificationType = clsResult?.Type,
         };
     }
 }
 
-/// <summary>
-/// ViewModel for the Bill tab
-/// XAML bindings: FilterViewModel, PaginationInfo, FirstPageCommand, PrevPageCommand,
-///   NextPageCommand, LastPageCommand, BillItems, SelectedBillItem,
-///   CopyNumberCommand, CopyMoneyCommand, ViewDetailCommand, DeleteBillCommand, MergeBillCommand
-/// </summary>
 public class BillTabViewModel : ViewModelBase
 {
     private const int PageSize = 50;
@@ -112,13 +110,11 @@ public class BillTabViewModel : ViewModelBase
     public BillFilterViewModel FilterViewModel { get; }
     private readonly BillClassifier _classifier;
 
-    // Pagination commands
     public ReactiveCommand<Unit, Unit> FirstPageCommand { get; }
     public ReactiveCommand<Unit, Unit> PrevPageCommand { get; }
     public ReactiveCommand<Unit, Unit> NextPageCommand { get; }
     public ReactiveCommand<Unit, Unit> LastPageCommand { get; }
 
-    // Context menu commands
     public ReactiveCommand<Unit, Unit> CopyNumberCommand { get; }
     public ReactiveCommand<Unit, Unit> CopyMoneyCommand { get; }
     public ReactiveCommand<Unit, Unit> ViewDetailCommand { get; }
@@ -130,11 +126,9 @@ public class BillTabViewModel : ViewModelBase
         FilterViewModel = new BillFilterViewModel();
         _classifier = new BillClassifier();
 
-        // Subscribe to filter changes
-        FilterViewModel.FilterChanged += () => RefreshData();
+        FilterViewModel.FilterChanged += () => { _currentPage = 1; RefreshData(); };
         FilterViewModel.SyncRequested += OnSyncRequested;
 
-        // Pagination
         FirstPageCommand = ReactiveCommand.Create(() => GoToPage(1));
         PrevPageCommand = ReactiveCommand.Create(() => GoToPage(Math.Max(1, _currentPage - 1)));
         NextPageCommand = ReactiveCommand.Create(() =>
@@ -144,66 +138,46 @@ public class BillTabViewModel : ViewModelBase
         });
         LastPageCommand = ReactiveCommand.Create(() => GoToPage(GetTotalPages()));
 
-        // Context menu
-        CopyNumberCommand = ReactiveCommand.Create(CopyNumber);
-        CopyMoneyCommand = ReactiveCommand.Create(CopyMoney);
+        CopyNumberCommand = ReactiveCommand.CreateFromTask(CopyNumberAsync);
+        CopyMoneyCommand = ReactiveCommand.CreateFromTask(CopyMoneyAsync);
         ViewDetailCommand = ReactiveCommand.Create(ViewDetail);
-        DeleteBillCommand = ReactiveCommand.Create(DeleteBill);
+        DeleteBillCommand = ReactiveCommand.CreateFromTask(DeleteBillAsync);
         MergeBillCommand = ReactiveCommand.Create(MergeBill);
     }
 
-    /// <summary>
-    /// Event raised when sync is requested
-    /// </summary>
     public event Action? SyncRequested;
 
-    private void OnSyncRequested()
-    {
-        SyncRequested?.Invoke();
-    }
+    private void OnSyncRequested() => SyncRequested?.Invoke();
 
     public void RefreshData()
     {
         if (_identityId <= 0) return;
 
         IsLoading = true;
+        ErrorMessage = null;
 
         try
         {
             InitDb.InitIdentityDb(_identityId);
 
-            TotalCount = BillMergedDb.GetCount(_identityId);
-            var bills = BillMergedDb.GetAll(_identityId, _currentPage, PageSize);
-
-            // Apply filters
             var (startTs, endTs) = FilterViewModel.GetTimeRange();
-            var filteredBills = bills.AsEnumerable();
+            var searchText = FilterViewModel.SearchText?.Trim() ?? "";
+            var billType = FilterViewModel.SelectedBillType;
 
-            if (startTs.HasValue)
-                filteredBills = filteredBills.Where(b => b.Timestamp >= startTs.Value);
-            if (endTs.HasValue)
-                filteredBills = filteredBills.Where(b => b.Timestamp <= endTs.Value);
+            // CRITICAL 4: 过滤下推到数据库层
+            var (bills, count) = BillMergedDb.GetFiltered(
+                _identityId,
+                _currentPage,
+                PageSize,
+                startTs,
+                endTs,
+                searchText,
+                billType == "全部" ? null : billType);
 
-            if (!string.IsNullOrEmpty(FilterViewModel.SearchText))
-            {
-                var search = FilterViewModel.SearchText.ToLowerInvariant();
-                filteredBills = filteredBills.Where(b =>
-                    (b.ItemType?.ToLowerInvariant().Contains(search) == true) ||
-                    (b.TargetUser?.ToLowerInvariant().Contains(search) == true) ||
-                    (b.Number?.ToLowerInvariant().Contains(search) == true));
-            }
+            TotalCount = count;
 
-            if (FilterViewModel.SelectedBillType != "全部")
-            {
-                var selectedType = FilterViewModel.SelectedBillType;
-                filteredBills = filteredBills.Where(b =>
-                {
-                    var result = _classifier.Classify(b);
-                    return result.Type == selectedType;
-                });
-            }
-
-            var displayItems = filteredBills
+            // 加载所有过滤后的项用于分类（数量有限，最多 PageSize）
+            var displayItems = bills
                 .Select(b => BillDisplayItem.FromBillMerged(b, _classifier))
                 .ToList();
 
@@ -242,40 +216,119 @@ public class BillTabViewModel : ViewModelBase
         PaginationInfo = $"第 {_currentPage}/{totalPages} 页，共 {TotalCount} 条记录";
     }
 
-    private void CopyNumber()
+    /// <summary>
+    /// CRITICAL 5: 剪贴板复制 — 使用 Avalonia TopLevel API
+    /// </summary>
+    private async Task CopyNumberAsync()
     {
         if (SelectedBillItem?.Number == null) return;
-        try
-        {
-            var clipboard = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-                ? desktop.MainWindow?.Clipboard
-                : null;
-            // For Avalonia 11+, use TopLevel clipboard
-            // Simple approach: just set the text
-            System.Diagnostics.Debug.WriteLine($"Copy number: {SelectedBillItem.Number}");
-        }
-        catch { }
+        await CopyToClipboardAsync(SelectedBillItem.Number);
     }
 
-    private void CopyMoney()
+    /// <summary>
+    /// CRITICAL 5: 剪贴板复制金额
+    /// </summary>
+    private async Task CopyMoneyAsync()
     {
         if (SelectedBillItem?.MoneyStr == null) return;
-        try
-        {
-            System.Diagnostics.Debug.WriteLine($"Copy money: {SelectedBillItem.MoneyStr}");
-        }
-        catch { }
+        await CopyToClipboardAsync(SelectedBillItem.MoneyStr);
     }
 
+    private static async Task CopyToClipboardAsync(string text)
+    {
+        try
+        {
+            var desktop = Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
+            var tl = desktop?.MainWindow;
+            if (tl != null)
+            {
+                var topLvl = Avalonia.Controls.TopLevel.GetTopLevel(tl);
+                if (topLvl?.Clipboard is { } cb)
+                {
+                    var setText = cb.GetType().GetMethod("SetTextAsync");
+                    if (setText != null)
+                        await (Task)setText.Invoke(cb, [text])!;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Clipboard error: {ex.Message}");
+        }
+    }
+
+    private static TopLevel? GetTopLevel()
+    {
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            return TopLevel.GetTopLevel(desktop.MainWindow);
+        return null;
+    }
+
+    /// <summary>
+    /// CRITICAL 6: ViewDetailCommand — 打开账单详情对话框
+    /// </summary>
     private void ViewDetail()
     {
         if (SelectedBillItem == null) return;
-        // TODO: Open detail dialog/window
+
+        var vm = new BillDetailViewModel(SelectedBillItem);
+        NavigationService.Instance.OpenWindow("BillDetail", vm);
     }
 
-    private void DeleteBill()
+    /// <summary>
+    /// CRITICAL 7: MergeBillCommand — 打开账单合并对话框
+    /// </summary>
+    private void MergeBill()
     {
         if (SelectedBillItem == null || _identityId <= 0) return;
+        var vm = new BillMergeViewModel(_identityId, SelectedBillItem);
+        vm.Saved += () => RefreshData();
+        NavigationService.Instance.OpenWindow("BillMerge", vm);
+    }
+
+    /// <summary>
+    /// CRITICAL 9: 删除前显示确认对话框
+    /// </summary>
+    private async Task DeleteBillAsync()
+    {
+        if (SelectedBillItem == null || _identityId <= 0) return;
+
+        var mainWindow = GetTopLevel();
+        if (mainWindow == null) return;
+
+        var confirmWindow = new Window
+        {
+            Title = "确认删除",
+            Width = 320, Height = 160,
+            WindowStartupLocation = WindowStartupLocation.CenterScreen,
+            CanResize = false,
+        };
+        var panel = new StackPanel { Margin = new Avalonia.Thickness(24), Spacing = 12 };
+        panel.Children.Add(new TextBlock { Text = "确认删除这条账单记录吗？", FontSize = 14 });
+        panel.Children.Add(new TextBlock
+        {
+            Text = $"{SelectedBillItem?.DateTimeFormatted} {SelectedBillItem?.ItemType}",
+            FontSize = 12,
+            Foreground = Avalonia.Media.Brushes.Gray
+        });
+        var btnPanel = new StackPanel
+        {
+            Orientation = Avalonia.Layout.Orientation.Horizontal,
+            Spacing = 8,
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right
+        };
+        var deleteBtn = new Button { Content = "删除", Width = 80 };
+        deleteBtn.Click += (_, _) => confirmWindow.Close(true);
+        var cancelBtn = new Button { Content = "取消", Width = 80 };
+        cancelBtn.Click += (_, _) => confirmWindow.Close(false);
+        btnPanel.Children.Add(cancelBtn);
+        btnPanel.Children.Add(deleteBtn);
+        panel.Children.Add(btnPanel);
+        confirmWindow.Content = panel;
+
+        var result = await confirmWindow.ShowDialog<bool>((Window)(mainWindow ?? GetTopLevel()!));
+
+        if (!result) return;
 
         try
         {
@@ -286,11 +339,5 @@ public class BillTabViewModel : ViewModelBase
         {
             ErrorMessage = $"删除记录失败: {ex.Message}";
         }
-    }
-
-    private void MergeBill()
-    {
-        // TODO: Open merge dialog — select multiple items and merge
-        // For now, mark the current item as combined
     }
 }

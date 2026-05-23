@@ -5,10 +5,6 @@ using shmtu.terminal.desktop.Services.Security;
 
 namespace shmtu.terminal.desktop.ViewModels.Startup;
 
-/// <summary>
-/// ViewModel for the Startup Password window
-/// XAML bindings: Password, ErrorMessage, HasError, ConfirmCommand
-/// </summary>
 public class StartupPasswordViewModel : ViewModelBase
 {
     private string _password = "";
@@ -33,9 +29,6 @@ public class StartupPasswordViewModel : ViewModelBase
 
     public ReactiveCommand<Unit, Unit> ConfirmCommand { get; }
 
-    /// <summary>
-    /// Event raised when password is successfully verified
-    /// </summary>
     public event Action? PasswordVerified;
 
     public StartupPasswordViewModel()
@@ -43,6 +36,10 @@ public class StartupPasswordViewModel : ViewModelBase
         ConfirmCommand = ReactiveCommand.Create(VerifyPassword);
     }
 
+    /// <summary>
+    /// Verify the entered password and raise PasswordVerified on success.
+    /// Supports both old SHA-256 hash format and new PBKDF2 format.
+    /// </summary>
     private void VerifyPassword()
     {
         if (string.IsNullOrEmpty(Password))
@@ -55,15 +52,24 @@ public class StartupPasswordViewModel : ViewModelBase
 
         if (!config.Security.EnableStartupProtection)
         {
-            // No protection enabled, proceed
             PasswordVerified?.Invoke();
             return;
         }
 
-        var inputHash = EncryptionService.HashPassword(Password);
-        if (inputHash == config.Security.PasswordHash)
+        var storedHash = config.Security.PasswordHash;
+
+        bool match;
+        if (storedHash.Length == 64) // Legacy SHA-256 hex format (64 chars)
         {
-            // Set master key for database encryption
+            match = EncryptionService.VerifyPasswordHash(Password, storedHash);
+        }
+        else // New PBKDF2 Base64 format
+        {
+            match = EncryptionService.VerifyPasswordHash(Password, storedHash);
+        }
+
+        if (match)
+        {
             EncryptionService.SetMasterKey(Password);
             PasswordVerified?.Invoke();
         }

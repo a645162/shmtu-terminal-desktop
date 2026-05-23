@@ -146,6 +146,17 @@ public static class TomlConfigService
             config.Ui.Language = GetString(ui, "language", "zh-CN");
         }
 
+
+        // [semester]
+        if (model.TryGetValue("semester", out var semObj) && semObj is TomlTable sem)
+        {
+            config.Semester.SemesterName = GetString(sem, "semester_name", "2024-2025学年第二学期");
+            if (sem.TryGetValue("start_date", out var sd) && sd is string startStr && DateTime.TryParse(startStr, out var sdt))
+                config.Semester.StartDate = sdt;
+            if (sem.TryGetValue("end_date", out var ed) && ed is string endStr && DateTime.TryParse(endStr, out var edt))
+                config.Semester.EndDate = edt;
+        }
+
         return config;
     }
 
@@ -199,6 +210,12 @@ public static class TomlConfigService
         sb.AppendLine("[ui]");
         sb.AppendLine($"theme = \"{config.Ui.Theme}\"");
         sb.AppendLine($"language = \"{config.Ui.Language}\"");
+
+
+        sb.AppendLine("[semester]");
+        sb.AppendLine($"semester_name = \"{config.Semester.SemesterName}\"");
+        sb.AppendLine($"start_date = \"{config.Semester.StartDate:yyyy-MM-dd}\"");
+        sb.AppendLine($"end_date = \"{config.Semester.EndDate:yyyy-MM-dd}\"");
 
         return sb.ToString();
     }
@@ -550,6 +567,16 @@ public static class TomlConfigService
             return (int)l;
         if (value is int i)
             return i;
+        return defaultValue;
+    }
+
+    private static DateTime GetDateTime(TomlTable table, string key, DateTime defaultValue)
+    {
+        if (table.TryGetValue(key, out var value) && value is string str)
+        {
+            if (DateTime.TryParse(str, out var dt))
+                return dt;
+        }
         return defaultValue;
     }
 

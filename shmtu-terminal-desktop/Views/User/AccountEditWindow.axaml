@@ -1,0 +1,82 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:material="using:Material.Styles"
+        xmlns:vm="using:shmtu.terminal.desktop.ViewModels.User"
+        mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="450"
+        x:Class="shmtu.terminal.desktop.Views.User.AccountEditWindow"
+        x:DataType="vm:AccountEditViewModel"
+        Title="{Binding WindowTitle}"
+        Width="420" Height="450"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="{DynamicResource MaterialDesignBackground}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="24" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,Auto">
+            <!-- Account Name -->
+            <TextBlock Grid.Row="0" Text="账号名称" FontSize="13" Margin="0,0,0,4" />
+            <TextBox Grid.Row="1"
+                     Text="{Binding AccountName}"
+                     Watermark="例如：本科校园卡"
+                     Margin="0,0,0,12" />
+
+            <!-- Student ID -->
+            <TextBlock Grid.Row="2" Text="学号（12位数字）" FontSize="13" Margin="0,0,0,4" />
+            <TextBox Grid.Row="3"
+                     Text="{Binding AccountId}"
+                     Watermark="例如：202312345678"
+                     IsReadOnly="{Binding IsEditMode}"
+                     Margin="0,0,0,12" />
+
+            <!-- Password -->
+            <TextBlock Grid.Row="4" FontSize="13" Margin="0,0,0,4">
+                <TextBlock.Text>
+                    <MultiBinding StringFormat="{}密码 ({0})">
+                        <Binding Path="PasswordHint" />
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+            <TextBox Grid.Row="5"
+                     Text="{Binding Password}"
+                     PasswordChar="*"
+                     Margin="0,0,0,12" />
+
+            <!-- Expire Date -->
+            <TextBlock Grid.Row="6" Text="过期日期" FontSize="13" Margin="0,0,0,4" />
+            <TextBox Grid.Row="7"
+                     Text="{Binding ExpireDate}"
+                     Watermark="例如：2099-12-31"
+                     Margin="0,0,0,12" />
+
+            <!-- Options -->
+            <StackPanel Grid.Row="8" Spacing="8" Margin="0,0,0,12">
+                <CheckBox Content="启用此账号" IsChecked="{Binding Enable}" />
+                <CheckBox Content="允许同步更新" IsChecked="{Binding EnableUpdate}" />
+            </StackPanel>
+
+            <!-- Error Message -->
+            <TextBlock Grid.Row="9"
+                       Text="{Binding ErrorMessage}"
+                       Foreground="#F44336"
+                       FontSize="12"
+                       VerticalAlignment="Center"
+                       Margin="0,0,0,8" />
+
+            <!-- Action Buttons -->
+            <StackPanel Grid.Row="10"
+                        Orientation="Horizontal"
+                        Spacing="8"
+                        HorizontalAlignment="Right">
+                <Button Content="取消"
+                        Command="{Binding CancelCommand}" />
+                <Button Content="保存"
+                        Command="{Binding SaveCommand}"
+                        Classes="Primary" />
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+
+</Window>

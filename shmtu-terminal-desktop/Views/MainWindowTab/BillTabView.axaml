@@ -3,101 +3,131 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:material="using:Material.Styles"
+             xmlns:materialControls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
              xmlns:billFilter="using:shmtu.terminal.desktop.Views.Component.Bill"
              mc:Ignorable="d" d:DesignWidth="960" d:DesignHeight="560"
              x:Class="shmtu.terminal.desktop.Views.MainWindowTab.BillTabView">
 
-    <DockPanel Margin="16,8">
+  <DockPanel Margin="16,8">
 
-        <!-- Filter Bar at Top -->
-        <Border DockPanel.Dock="Top"
-                Background="{DynamicResource MaterialDesignCardBackground}"
-                CornerRadius="8"
-                Padding="16,12"
-                Margin="0,0,0,8"
-                BoxShadow="0 1 3 0 #1F000000">
-            <billFilter:BillFilterUserControl DataContext="{Binding FilterViewModel}" />
-        </Border>
+    <!-- Error Banner (CRITICAL 10) -->
+    <Border DockPanel.Dock="Top"
+            Background="#FFEBEE"
+            CornerRadius="4"
+            Padding="12,8"
+            Margin="0,0,0,8"
+            IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+      <TextBlock Text="{Binding ErrorMessage}"
+                 Foreground="#C62828"
+                 FontSize="12"
+                 TextWrapping="Wrap" />
+    </Border>
 
-        <!-- Pagination at Bottom -->
-        <Border DockPanel.Dock="Bottom"
-                Padding="16,8"
-                Margin="0,8,0,0">
-            <DockPanel>
-                <TextBlock Text="{Binding PaginationInfo}"
-                           VerticalAlignment="Center"
-                           FontSize="12"
-                           Foreground="{DynamicResource MaterialDesignBodyLight}" />
-                <StackPanel Orientation="Horizontal"
-                            HorizontalAlignment="Right"
-                            Spacing="4">
-                    <Button Content="首页"
-                            Command="{Binding FirstPageCommand}"
-                            Classes="Flat" FontSize="12" />
-                    <Button Content="上一页"
-                            Command="{Binding PrevPageCommand}"
-                            Classes="Flat" FontSize="12" />
-                    <Button Content="下一页"
-                            Command="{Binding NextPageCommand}"
-                            Classes="Flat" FontSize="12" />
-                    <Button Content="末页"
-                            Command="{Binding LastPageCommand}"
-                            Classes="Flat" FontSize="12" />
-                </StackPanel>
-            </DockPanel>
-        </Border>
+    <!-- Loading Overlay (CRITICAL 10) -->
+    <Border DockPanel.Dock="Top"
+            Background="#1A000000"
+            CornerRadius="4"
+            Padding="12,8"
+            Margin="0,0,0,8"
+            IsVisible="{Binding IsLoading}">
+      <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+        <ProgressBar IsIndeterminate="True"
+                                     Width="120" Height="4"
+                                     VerticalAlignment="Center" />
+        <TextBlock Text="加载中..." FontSize="12" VerticalAlignment="Center" />
+      </StackPanel>
+    </Border>
 
-        <!-- DataGrid -->
-        <DataGrid Name="BillDataGrid"
-                  ItemsSource="{Binding BillItems}"
-                  SelectedItem="{Binding SelectedBillItem}"
-                  AutoGenerateColumns="False"
-                  CanUserSortColumns="True"
-                  IsReadOnly="True"
-                  GridLinesVisibility="Horizontal"
-                  BorderThickness="0"
-                  Background="{DynamicResource MaterialDesignCardBackground}"
-                  RowBackground="Transparent">
+    <!-- Identity Display Bar (MEDIUM 4) -->
+    <Border DockPanel.Dock="Top"
+            Background="{DynamicResource MaterialDesignChipBackground}"
+            CornerRadius="4"
+            Padding="12,6"
+            Margin="0,0,0,8"
+            IsVisible="{Binding CurrentIdentityShortName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+      <DockPanel>
+        <TextBlock Text="当前身份: "
+                   FontSize="12"
+                   Foreground="{DynamicResource MaterialDesignBodyLight}"
+                   VerticalAlignment="Center" />
+        <TextBlock Text="{Binding CurrentIdentityShortName}"
+                   FontSize="12"
+                   FontWeight="Medium"
+                   VerticalAlignment="Center" />
+        <Button Content="切换身份"
+                Command="{Binding SwitchIdentityCommand}"
+                Classes="Flat"
+                FontSize="11"
+                HorizontalAlignment="Right"
+                DockPanel.Dock="Right" />
+      </DockPanel>
+    </Border>
 
-            <DataGrid.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="复制交易号"
-                              Command="{Binding CopyNumberCommand}" />
-                    <MenuItem Header="复制金额"
-                              Command="{Binding CopyMoneyCommand}" />
-                    <Separator />
-                    <MenuItem Header="查看详情"
-                              Command="{Binding ViewDetailCommand}" />
-                    <MenuItem Header="删除记录"
-                              Command="{Binding DeleteBillCommand}" />
-                    <Separator />
-                    <MenuItem Header="合并记录"
-                              Command="{Binding MergeBillCommand}" />
-                </ContextMenu>
-            </DataGrid.ContextMenu>
+    <!-- Filter Bar at Top -->
+    <Border DockPanel.Dock="Top"
+            Background="{DynamicResource MaterialDesignCardBackground}"
+            CornerRadius="8"
+            Padding="16,12"
+            Margin="0,0,0,8"
+            BoxShadow="0 1 3 0 #1F000000">
+      <billFilter:BillFilterUserControl DataContext="{Binding FilterViewModel}" />
+    </Border>
 
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="日期时间"
-                                    Binding="{Binding DateTimeFormatted}"
-                                    Width="*" />
-                <DataGridTextColumn Header="交易名称"
-                                    Binding="{Binding ItemType}"
-                                    Width="*" />
-                <DataGridTextColumn Header="对方账户"
-                                    Binding="{Binding TargetUser}"
-                                    Width="*" />
-                <DataGridTextColumn Header="金额"
-                                    Binding="{Binding MoneyStr}"
-                                    Width="Auto" />
-                <DataGridTextColumn Header="支付方式"
-                                    Binding="{Binding Method}"
-                                    Width="Auto" />
-                <DataGridTextColumn Header="状态"
-                                    Binding="{Binding StatusStr}"
-                                    Width="Auto" />
-            </DataGrid.Columns>
-        </DataGrid>
+    <!-- Pagination at Bottom -->
+    <Border DockPanel.Dock="Bottom"
+            Padding="16,8"
+            Margin="0,8,0,0">
+      <DockPanel>
+        <TextBlock Text="{Binding PaginationInfo}"
+                   VerticalAlignment="Center"
+                   FontSize="12"
+                   Foreground="{DynamicResource MaterialDesignBodyLight}" />
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="4">
+          <Button Content="首页" Command="{Binding FirstPageCommand}"
+                  Classes="Flat" FontSize="12" />
+          <Button Content="上一页" Command="{Binding PrevPageCommand}"
+                  Classes="Flat" FontSize="12" />
+          <Button Content="下一页" Command="{Binding NextPageCommand}"
+                  Classes="Flat" FontSize="12" />
+          <Button Content="末页" Command="{Binding LastPageCommand}"
+                  Classes="Flat" FontSize="12" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
 
-    </DockPanel>
+    <!-- DataGrid -->
+    <DataGrid Name="BillDataGrid"
+              ItemsSource="{Binding BillItems}"
+              SelectedItem="{Binding SelectedBillItem}"
+              AutoGenerateColumns="False"
+              CanUserSortColumns="True"
+              IsReadOnly="True"
+              GridLinesVisibility="Horizontal"
+              BorderThickness="0"
+              Background="{DynamicResource MaterialDesignCardBackground}"
+              RowBackground="Transparent">
+      <DataGrid.ContextMenu>
+        <ContextMenu>
+          <MenuItem Header="复制交易号" Command="{Binding CopyNumberCommand}" />
+          <MenuItem Header="复制金额" Command="{Binding CopyMoneyCommand}" />
+          <Separator />
+          <MenuItem Header="查看详情" Command="{Binding ViewDetailCommand}" />
+          <MenuItem Header="删除记录" Command="{Binding DeleteBillCommand}" />
+          <Separator />
+          <MenuItem Header="合并记录" Command="{Binding MergeBillCommand}" />
+        </ContextMenu>
+      </DataGrid.ContextMenu>
+      <DataGrid.Columns>
+        <DataGridTextColumn Header="日期时间" Binding="{Binding DateTimeFormatted}" Width="*" />
+        <DataGridTextColumn Header="交易名称" Binding="{Binding ItemType}" Width="*" />
+        <DataGridTextColumn Header="对方账户" Binding="{Binding TargetUser}" Width="*" />
+        <DataGridTextColumn Header="金额" Binding="{Binding MoneyStr}" Width="Auto" />
+        <DataGridTextColumn Header="支付方式" Binding="{Binding Method}" Width="Auto" />
+        <DataGridTextColumn Header="状态" Binding="{Binding StatusStr}" Width="Auto" />
+      </DataGrid.Columns>
+    </DataGrid>
 
+  </DockPanel>
 </UserControl>

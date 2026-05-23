@@ -1,0 +1,59 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:material="using:Material.Styles"
+        xmlns:vm="using:shmtu.terminal.desktop.ViewModels.User"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="350"
+        x:Class="shmtu.terminal.desktop.Views.User.IdentityEditWindow"
+        x:DataType="vm:IdentityEditViewModel"
+        Title="{Binding WindowTitle}"
+        Width="400" Height="350"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="{DynamicResource MaterialDesignBackground}">
+
+    <Grid Margin="24" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto">
+        <!-- Identity Name -->
+        <TextBlock Grid.Row="0" Text="身份名称" FontSize="13" Margin="0,0,0,4" />
+        <TextBox Grid.Row="1"
+                 Text="{Binding Name}"
+                 Watermark="例如：本人、家人"
+                 Margin="0,0,0,16" />
+
+        <!-- Birthday -->
+        <TextBlock Grid.Row="2" Text="生日（可选）" FontSize="13" Margin="0,0,0,4" />
+        <TextBox Grid.Row="3"
+                 Text="{Binding Birthday}"
+                 Watermark="例如：2000-01-01"
+                 Margin="0,0,0,16" />
+
+        <!-- Options -->
+        <StackPanel Grid.Row="4" Spacing="8" Margin="0,0,0,16">
+            <CheckBox Content="启用此身份" IsChecked="{Binding Enable}" />
+            <CheckBox Content="允许同步更新" IsChecked="{Binding EnableUpdate}" />
+        </StackPanel>
+
+        <!-- Error Message -->
+        <TextBlock Grid.Row="5"
+                   Text="{Binding ErrorMessage}"
+                   Foreground="#F44336"
+                   FontSize="12"
+                   VerticalAlignment="Center"
+                   Margin="0,0,0,8" />
+
+        <!-- Action Buttons -->
+        <StackPanel Grid.Row="6"
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    HorizontalAlignment="Right">
+            <Button Content="取消"
+                    Command="{Binding CancelCommand}" />
+            <Button Content="保存"
+                    Command="{Binding SaveCommand}"
+                    Classes="Primary" />
+        </StackPanel>
+    </Grid>
+
+</Window>

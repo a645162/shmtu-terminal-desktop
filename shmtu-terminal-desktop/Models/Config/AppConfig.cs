@@ -1,8 +1,5 @@
 namespace shmtu.terminal.desktop.Models.Config;
 
-/// <summary>
-/// 全局应用配置模型 — 对应 app_config.toml
-/// </summary>
 public class AppConfig
 {
     public SecurityConfig Security { get; set; } = new();
@@ -13,6 +10,7 @@ public class AppConfig
     public ClassificationConfig Classification { get; set; } = new();
     public UpdateConfig Update { get; set; } = new();
     public UiConfig Ui { get; set; } = new();
+    public SemesterConfig Semester { get; set; } = new();
 }
 
 public class SecurityConfig
@@ -29,9 +27,7 @@ public class IdentityConfig
 
 public class CaptchaConfig
 {
-    /// <summary>
-    /// manual / remote_ocr / local_onnx
-    /// </summary>
+    /// <summary>manual / remote_ocr / local_onnx</summary>
     public string Mode { get; set; } = "manual";
     public string RemoteOcrHost { get; set; } = "";
     public int RemoteOcrPort { get; set; } = 0;
@@ -67,9 +63,17 @@ public class UpdateConfig
 
 public class UiConfig
 {
-    /// <summary>
-    /// light / dark / system
-    /// </summary>
+    /// <summary>light / dark / system</summary>
     public string Theme { get; set; } = "light";
     public string Language { get; set; } = "zh-CN";
+}
+
+/// <summary>
+/// HIGH 13: 学期配置 — 从配置文件读取学期日期
+/// </summary>
+public class SemesterConfig
+{
+    public string SemesterName { get; set; } = "2024-2025学年第二学期";
+    public DateTime StartDate { get; set; } = new(2025, 2, 17);
+    public DateTime EndDate { get; set; } = new(2025, 6, 27);
 }

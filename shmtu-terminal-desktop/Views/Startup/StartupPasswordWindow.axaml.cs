@@ -14,14 +14,10 @@ public partial class StartupPasswordWindow : Window
     {
         if (e.Key == Key.Enter)
         {
-            // Trigger confirm command via DataContext
-            // ViewModel will be created by the UI business coder
-            if (DataContext is { } vm)
+            // HIGH 17 fix: 直接调用 ConfirmCommand，避免反射
+            if (DataContext is ViewModels.Startup.StartupPasswordViewModel vm)
             {
-                // Use reflection-free approach: find and click the confirm button
-                // Or the ViewModel coder can bind this to a command
-                var confirmMethod = vm.GetType().GetMethod("Confirm");
-                confirmMethod?.Invoke(vm, null);
+                vm.ConfirmCommand.Execute().Subscribe();
             }
         }
     }

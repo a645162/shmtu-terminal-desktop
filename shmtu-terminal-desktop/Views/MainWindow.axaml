@@ -29,6 +29,57 @@
     </Window.Styles>
 
     <DockPanel>
+        <!-- Identity Bar at Top -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource PrimaryHueMidBrush}"
+                Padding="16,8">
+            <Grid ColumnDefinitions="*,Auto">
+                <!-- Left: App title -->
+                <TextBlock Grid.Column="0"
+                           Text="海大终端"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           Foreground="White" />
+
+                <!-- Right: Identity selector -->
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            Spacing="8"
+                            VerticalAlignment="Center">
+                    <!-- Current identity badge -->
+                    <Border Background="#33FFFFFF"
+                            CornerRadius="12"
+                            Padding="12,4"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="{Binding CurrentIdentityShortName}"
+                                   Foreground="White"
+                                   FontSize="13"
+                                   FontWeight="Medium"
+                                   VerticalAlignment="Center" />
+                    </Border>
+
+                    <!-- Switch identity button -->
+                    <Button Content="切换身份"
+                            Command="{Binding SwitchIdentityCommand}"
+                            Background="#33FFFFFF"
+                            Foreground="White"
+                            CornerRadius="4"
+                            Padding="12,4"
+                            FontSize="12" />
+
+                    <!-- Manage identity button -->
+                    <Button Content="管理"
+                            Command="{Binding ManageIdentityCommand}"
+                            Background="#33FFFFFF"
+                            Foreground="White"
+                            CornerRadius="4"
+                            Padding="12,4"
+                            FontSize="12" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
         <!-- Status Bar at Bottom -->
         <Border DockPanel.Dock="Bottom"
                 Background="{DynamicResource MaterialDesignToolBarBackground}"

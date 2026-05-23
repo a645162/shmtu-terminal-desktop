@@ -1,17 +1,12 @@
 using System.Collections.ObjectModel;
 using System.Reactive;
+using System.Reactive.Linq;
 using ReactiveUI;
-using shmtu.terminal.desktop.Database.Manage.Bill;
 using shmtu.terminal.desktop.Models.Config;
 using shmtu.terminal.desktop.Services.Config;
 
 namespace shmtu.terminal.desktop.ViewModels.Component.Bill;
 
-/// <summary>
-/// ViewModel for the bill filter component
-/// XAML bindings: SyncCommand, SearchText, BillTypes, SelectedBillType,
-///   TimeRanges, SelectedTimeRange, IsCustomTimeRange, StartDate, EndDate
-/// </summary>
 public class BillFilterViewModel : ViewModelBase
 {
     private string _searchText = "";
@@ -21,7 +16,8 @@ public class BillFilterViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _searchText, value);
     }
 
-    public ObservableCollection<string> BillTypes { get; } = ["全部", "充值", "消费", "电费", "洗澡", "热水", "食堂", "蛋糕", "其他"];
+    public ObservableCollection<string> BillTypes { get; } =
+        ["全部", "充值", "消费", "电费", "洗澡", "热水", "食堂", "蛋糕", "其他"];
 
     private string _selectedBillType = "全部";
     public string SelectedBillType
@@ -30,7 +26,8 @@ public class BillFilterViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedBillType, value);
     }
 
-    public ObservableCollection<string> TimeRanges { get; } = ["全部", "今天", "近7天", "近30天", "本月", "自定义"];
+    public ObservableCollection<string> TimeRanges { get; } =
+        ["全部", "今天", "近7天", "近30天", "本月", "自定义"];
 
     private string _selectedTimeRange = "全部";
     public string SelectedTimeRange
@@ -59,39 +56,38 @@ public class BillFilterViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _endDate, value);
     }
 
-    /// <summary>
-    /// Event raised when filter criteria change
-    /// </summary>
     public event Action? FilterChanged;
-
-    /// <summary>
-    /// Event raised when sync is requested
-    /// </summary>
     public event Action? SyncRequested;
 
     public ReactiveCommand<Unit, Unit> SyncCommand { get; }
 
+    private bool _initialized = false;
+
     public BillFilterViewModel()
     {
-        SyncCommand = ReactiveCommand.Create(() =>
-        {
-            SyncRequested?.Invoke();
-        });
+        SyncCommand = ReactiveCommand.Create(() => SyncRequested?.Invoke());
 
-        // Raise filter changed when criteria change
+        // CRITICAL 8: SearchText 防抖 — 300ms 内只触发一次
+        this.WhenAnyValue(x => x.SearchText)
+            .Throttle(TimeSpan.FromMilliseconds(300))
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(_ => FilterChanged?.Invoke());
+
+        // 其他过滤器：跳过首次订阅，避免 ViewModel 初始化时触发
         this.WhenAnyValue(x => x.SelectedBillType, x => x.SelectedTimeRange,
             x => x.StartDate, x => x.EndDate, x => x.SearchText)
-            .Subscribe(_ => FilterChanged?.Invoke());
+            .Throttle(TimeSpan.FromMilliseconds(300), RxApp.TaskpoolScheduler)
+            .Subscribe(_ => {
+                if (_initialized)
+                    FilterChanged?.Invoke();
+                _initialized = true;
+            });
     }
 
-    /// <summary>
-    /// Get the computed time range as unix timestamps
-    /// </summary>
     public (long? StartTimestamp, long? EndTimestamp) GetTimeRange()
     {
         long? startTs = null;
         long? endTs = null;
-
         var now = DateTime.Now;
         var today = now.Date;
 
@@ -120,7 +116,6 @@ public class BillFilterViewModel : ViewModelBase
                     endTs = ((DateTimeOffset)EndDate.Value.AddDays(1)).ToUnixTimeSeconds();
                 break;
         }
-
         return (startTs, endTs);
     }
 }

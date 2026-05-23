@@ -1,0 +1,63 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialControls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+        mc:Ignorable="d" d:DesignWidth="320" d:DesignHeight="280"
+        x:Class="shmtu.terminal.desktop.Views.Component.Captcha.ManualCaptchaWindow"
+        Title="请输入验证码"
+        Width="320" Height="280"
+        WindowStartupLocation="CenterScreen"
+        CanResize="False"
+        SizeToContent="Manual"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="{DynamicResource MaterialDesignBackground}">
+
+  <StackPanel Margin="24,20" Spacing="12" HorizontalAlignment="Center">
+
+    <TextBlock Text="请输入验证码"
+               FontSize="14" FontWeight="Medium"
+               HorizontalAlignment="Center" />
+
+    <!-- Captcha Image -->
+    <materialControls:Card Padding="4" HorizontalAlignment="Center">
+      <Image Source="{Binding CaptchaImage}"
+             Width="240" Height="80"
+             Stretch="Uniform" />
+    </materialControls:Card>
+
+    <!-- Expression hint -->
+    <TextBlock Text="{Binding CaptchaExpression}"
+               FontSize="11"
+               Foreground="{DynamicResource MaterialDesignBodyLight}"
+               HorizontalAlignment="Center"
+               IsVisible="{Binding HasImage}" />
+
+    <!-- Answer Input -->
+    <TextBox Text="{Binding CaptchaAnswer}"
+             Watermark="输入答案，按回车确认"
+             Width="240"
+             HorizontalAlignment="Center"
+             x:Name="AnswerBox" />
+
+    <!-- Error Message -->
+    <TextBlock Text="{Binding ErrorMessage}"
+               FontSize="11"
+               Foreground="#F44336"
+               HorizontalAlignment="Center"
+               IsVisible="{Binding HasError}" />
+
+    <!-- Action Buttons -->
+    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+      <Button Content="复制图片"
+              Command="{Binding CopyImageCommand}"
+              Classes="Flat" FontSize="12" />
+      <Button Content="确认"
+              Command="{Binding ConfirmCommand}"
+              Classes="Primary" FontSize="12"
+              Width="80" />
+    </StackPanel>
+
+  </StackPanel>
+
+</Window>

@@ -1,17 +1,28 @@
+using System.Collections.ObjectModel;
 using System.Reactive;
+using System.Windows.Input;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using ReactiveUI;
+using shmtu.cas.auth;
+using shmtu.cas.auth.common;
+using shmtu.cas.captcha;
 using shmtu.terminal.desktop.Database.Manage.Identity;
+using shmtu.terminal.desktop.Models.Identity;
 using shmtu.terminal.desktop.Models.Config;
 using shmtu.terminal.desktop.Services.Config;
 using shmtu.terminal.desktop.Services.Navigation;
+using shmtu.terminal.desktop.ViewModels.Component.Captcha;
 using shmtu.terminal.desktop.ViewModels.MainWindowTab;
+using shmtu.terminal.desktop.ViewModels.Startup;
+using shmtu.terminal.desktop.ViewModels.User;
+using shmtu.terminal.desktop.Views.Component.Captcha;
 
 namespace shmtu.terminal.desktop.ViewModels;
 
 /// <summary>
 /// ViewModel for the main window
-/// XAML bindings: CurrentIdentityName, SyncStatus, LastSyncTime, SelectedTabIndex,
-///   HomeViewModel, BillViewModel, FeaturesViewModel
 /// </summary>
 public class MainWindowViewModel : ViewModelBase
 {
@@ -20,6 +31,13 @@ public class MainWindowViewModel : ViewModelBase
     {
         get => _currentIdentityName;
         set => this.RaiseAndSetIfChanged(ref _currentIdentityName, value);
+    }
+
+    private string _currentIdentityShortName = "";
+    public string CurrentIdentityShortName
+    {
+        get => _currentIdentityShortName;
+        set => this.RaiseAndSetIfChanged(ref _currentIdentityShortName, value);
     }
 
     private string _syncStatus = "就绪";
@@ -49,9 +67,6 @@ public class MainWindowViewModel : ViewModelBase
 
     private int _currentIdentityId;
 
-    /// <summary>
-    /// The currently selected identity ID
-    /// </summary>
     public int CurrentIdentityId
     {
         get => _currentIdentityId;
@@ -62,19 +77,48 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
+    public ObservableCollection<IdentityInfo> AvailableIdentities { get; } = [];
+
+    public ReactiveCommand<Unit, Unit> SwitchIdentityCommand { get; }
+    public ReactiveCommand<Unit, Unit> ManageIdentityCommand { get; }
+
     public MainWindowViewModel()
     {
         HomeViewModel = new HomeTabViewModel();
         BillViewModel = new BillTabViewModel();
         FeaturesViewModel = new FeaturesTabViewModel();
 
-        // Subscribe to sync requests from bill tab
         BillViewModel.SyncRequested += OnSyncRequested;
+
+        SwitchIdentityCommand = ReactiveCommand.Create(OpenIdentitySelect);
+        ManageIdentityCommand = ReactiveCommand.Create(() =>
+        {
+            NavigationService.Instance.OpenWindow("IdentityManager", new IdentityManagerViewModel());
+        });
+
+        LoadAvailableIdentities();
     }
 
-    /// <summary>
-    /// Initialize with a specific identity
-    /// </summary>
+    private void LoadAvailableIdentities()
+    {
+        AvailableIdentities.Clear();
+        foreach (var identity in IdentityDb.GetEnabled())
+        {
+            AvailableIdentities.Add(identity);
+        }
+    }
+
+    private void OpenIdentitySelect()
+    {
+        var selectViewModel = new IdentitySelectViewModel();
+        selectViewModel.IdentitySelected += identityId =>
+        {
+            CurrentIdentityId = identityId;
+            LoadAvailableIdentities();
+        };
+        NavigationService.Instance.OpenWindow("IdentitySelect", selectViewModel);
+    }
+
     public void InitializeWithIdentity(int identityId)
     {
         CurrentIdentityId = identityId;
@@ -88,56 +132,183 @@ public class MainWindowViewModel : ViewModelBase
         if (identity != null)
         {
             CurrentIdentityName = $"当前身份: {identity.Name}";
+            CurrentIdentityShortName = identity.Name;
         }
 
-        // Propagate identity to child ViewModels
         HomeViewModel.IdentityId = identityId;
         BillViewModel.IdentityId = identityId;
     }
 
-    private async void OnSyncRequested()
+    /// <summary>
+    /// 根据 AppConfig.Captcha.Mode 选择对应的验证码解析器
+    /// </summary>
+    private ICaptchaResolver CreateCaptchaResolver()
     {
+        var config = TomlConfigService.LoadAppConfig();
+
+        return config.Captcha.Mode switch
+        {
+            "remote_ocr" => new RemoteOcrCaptchaResolver(
+                config.Captcha.RemoteOcrHost,
+                config.Captcha.RemoteOcrPort > 0 ? config.Captcha.RemoteOcrPort : 21601),
+
+            "local_onnx" => new RemoteOcrCaptchaResolver(
+                config.Captcha.RemoteOcrHost,
+                config.Captcha.RemoteOcrPort > 0 ? config.Captcha.RemoteOcrPort : 21601),
+
+            _ => new ManualCaptchaResolver(async (imageData, ct) =>
+            {
+                return await ShowManualCaptchaDialogAsync(imageData, ct);
+            }),
+        };
+    }
+
+    /// <summary>
+    /// 弹出 Avalonia 窗口让用户输入验证码
+    /// </summary>
+    private async Task<CaptchaAnswer> ShowManualCaptchaDialogAsync(
+        byte[] imageData,
+        CancellationToken cancellationToken)
+    {
+        var vm = new ManualCaptchaViewModel();
+        vm.SetImageBytes(imageData);
+        vm.Tcs = new TaskCompletionSource<CaptchaResult>();
+
+        var window = new ManualCaptchaWindow { DataContext = vm };
+
+        // Show dialog non-blockingly via dispatcher
+        var topLevel = GetTopLevel();
+        if (topLevel == null)
+            throw new InvalidOperationException("无法获取顶级窗口");
+
+        var mainWin = GetMainWindow();
+            if (mainWin != null) await window.ShowDialog(mainWin);
+
+        var result = await vm.Tcs.Task.WaitAsync(cancellationToken);
+        return new CaptchaAnswer(result.Answer, CaptchaAnswerKind.Answer);
+    }
+
+    private static Window? GetMainWindow()
+    {
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            return desktop.MainWindow;
+        return null;
+    }
+
+    private static TopLevel? GetTopLevel()
+    {
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            return TopLevel.GetTopLevel(desktop.MainWindow);
+        return null;
+    }
+
+    /// <summary>
+    /// 参考 BillDemo.LoginWithRetry：登录失败自动重试，最多5次
+    /// </summary>
+    private async Task<bool> LoginWithRetryAsync(
+        EpayAuth epayAuth,
+        string username,
+        string password,
+        ICaptchaResolver resolver,
+        CancellationToken ct)
+    {
+        const int maxAttempts = 5;
+
+        var probe = await epayAuth.ProbeLoginAsync(ct);
+        if (probe is LoginProbe.AlreadyLoggedIn)
+            return true;
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            SyncStatus = $"第{attempt}/{maxAttempts}次登录尝试...";
+
+            var result = await epayAuth.SubmitLoginAsync(username, password, ct);
+            switch (result)
+            {
+                case LoginSubmitResult.Success:
+                    if (await epayAuth.TestLoginStatusAsync(ct))
+                    {
+                        SyncStatus = "登录验证成功！";
+                        return true;
+                    }
+                    SyncStatus = "登录验证失败";
+                    return false;
+
+                case LoginSubmitResult.ValidateCodeError:
+                    SyncStatus = "验证码错误，重试中...";
+                    continue;
+
+                case LoginSubmitResult.PasswordError:
+                    SyncStatus = "用户名或密码错误";
+                    return false;
+
+                case LoginSubmitResult.Failure f:
+                    SyncStatus = $"登录失败: {f.Message}";
+                    return false;
+            }
+        }
+
+        SyncStatus = $"超过最大重试次数 {maxAttempts}";
+        return false;
+    }
+
+    /// <summary>
+    /// 处理同步请求 — 入口
+    /// </summary>
+    private async Task OnSyncRequestedAsync(CancellationToken ct)
+    {
+        if (_currentIdentityId <= 0)
+        {
+            SyncStatus = "请先选择身份";
+            return;
+        }
+
+        SyncStatus = "同步中...";
+
+        // 通过 ServiceLocator 解析（修复 HIGH 11）
+        var syncService = new Services.Sync.BillSyncService();
+
+        syncService.ProgressChanged += progress =>
+        {
+            SyncStatus = progress.Status switch
+            {
+                "syncing" => $"正在同步: {progress.AccountName}...",
+                "completed" => $"已完成: {progress.AccountName} (+{progress.NewCount}条)",
+                "failed" => $"失败: {progress.AccountName}",
+                _ => progress.Status,
+            };
+        };
+
+        var config = TomlConfigService.LoadAppConfig();
+        var captchaResolver = CreateCaptchaResolver();
+
         try
         {
-            SyncStatus = "同步中...";
-
-            // Use BillSyncService to sync all accounts under the current identity
-            var syncService = new Services.Sync.BillSyncService();
-
-            // Subscribe to progress
-            syncService.ProgressChanged += progress =>
-            {
-                SyncStatus = progress.Status switch
-                {
-                    "syncing" => $"正在同步: {progress.AccountName}...",
-                    "completed" => $"已完成: {progress.AccountName} (+{progress.NewCount}条)",
-                    "failed" => $"失败: {progress.AccountName}",
-                    _ => progress.Status,
-                };
-            };
-
-            // For now, use manual captcha resolver
-            // In production, this would use the configured resolver from AppConfig
-            var captchaResolver = new shmtu.cas.captcha.ManualCaptchaResolver(async (img, _) =>
-            {
-                // Manual resolution - would show a dialog to user
-                // For now, return empty to skip this account
-                throw new NotSupportedException("Manual captcha resolution requires user interaction. Configure OCR instead.");
-            });
-
-            var result = await syncService.SyncIdentityAsync(
-                _currentIdentityId, captchaResolver);
+            var result = await syncService.SyncIdentityAsync(_currentIdentityId, captchaResolver, ct);
 
             SyncStatus = $"同步完成: {result.SuccessCount}成功, {result.FailedCount}失败, +{result.TotalNewBills}条";
             LastSyncTime = $"最后同步: {DateTime.Now:HH:mm:ss}";
 
-            // Refresh data after sync
             HomeViewModel.RefreshData();
             BillViewModel.RefreshData();
         }
         catch (Exception ex)
         {
             SyncStatus = $"同步失败: {ex.Message}";
+            ErrorMessage = $"同步错误: {ex.Message}";
         }
+        finally
+        {
+            if (captchaResolver is IDisposable d)
+                d.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// 同步请求事件处理（兼容原事件签名）
+    /// </summary>
+    private void OnSyncRequested()
+    {
+        _ = OnSyncRequestedAsync(CancellationToken.None);
     }
 }
