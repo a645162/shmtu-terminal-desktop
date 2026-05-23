@@ -154,17 +154,17 @@ public class AccountEditViewModel : ViewModelBase
                 if (account == null) return;
 
                 account.AccountName = AccountName.Trim();
-                account.AccountId = AccountId.Trim();
+                // 学号可以修改
+                if (!string.IsNullOrWhiteSpace(AccountId))
+                {
+                    account.AccountId = AccountId.Trim();
+                }
                 account.Enable = Enable;
                 account.EnableUpdate = EnableUpdate;
                 account.ExpireDate = ExpireDate;
 
-                AccountDb.Update(account);
-
-                if (!string.IsNullOrWhiteSpace(Password))
-                {
-                    AccountDb.UpdatePassword(_existingAccountId, Password);
-                }
+                // 空密码表示不修改，传入空字符串让后端跳过密码更新
+                AccountDb.Update(account, string.IsNullOrWhiteSpace(Password) ? "" : Password);
             }
             else
             {

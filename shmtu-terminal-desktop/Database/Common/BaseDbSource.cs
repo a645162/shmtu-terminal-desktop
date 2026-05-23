@@ -1,4 +1,5 @@
-﻿using System;
+using shmtu.terminal.desktop.Services;
+using System;
 using Microsoft.Data.Sqlite;
 using SqlSugar;
 
@@ -42,6 +43,7 @@ public abstract class BaseDbSource
                 Mode = SqliteOpenMode.ReadWrite,
                 Password = Password
             }.ToString();
+            LoggingService.Debug("[Database] 使用加密数据库连接");
         }
 
         var db = new SqlSugarClient(new ConnectionConfig()
@@ -49,19 +51,40 @@ public abstract class BaseDbSource
                 IsAutoCloseConnection = true,
                 DbType = DbType.Sqlite,
                 ConnectionString = connectionString,
-                LanguageType = LanguageType.Default //Set language
+                LanguageType = LanguageType.Default
             },
             it =>
             {
                 // Logging SQL statements and parameters before execution
-                // 在执行前记录 SQL 语句和参数
                 it.Aop.OnLogExecuting =
                     (sql, para)
                         =>
                     {
-                        Console.WriteLine(UtilMethods.GetNativeSql(sql, para));
+                        // Debug 级别日志：详细的 SQL 执行信息
+                        LoggingService.Verbose("[SQL] {Sql} | Params={Params}",
+                            UtilMethods.GetNativeSql(sql, para),
+                            para != null ? string.Join(", ", para.Select(p => p?.ToString() ?? "null")) : "无");
+                    };
+
+                // SQL 执行完成后记录（用于调试慢查询）
+                it.Aop.OnLogExecuted =
+                    (sql, para) =>
+                    {
+                        // 记录执行时间超过 1 秒的查询
+                        LoggingService.Debug("[SQL] 执行完成 | Sql={Sql}", UtilMethods.GetNativeSql(sql, para));
+                    };
+
+                // 错误回调
+                it.Aop.OnError =
+                    (exp) =>
+                    {
+                        LoggingService.Error(exp.Sql, "[SQL] SQL 执行错误 | Error={Error}", exp.Message);
                     };
             });
+
+        LoggingService.Debug("[Database] 创建新的数据库连接 | Connection={Connection}",
+            connectionString.Contains("Password") ? "[加密连接]" : connectionString);
+
         return db;
     }
 
@@ -78,12 +101,15 @@ public abstract class BaseDbSource
             }
         }
 
-        return System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
+        var absolutePath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
+        LoggingService.Verbose("[Database] 获取数据库绝对路径 | Path={Path}", absolutePath);
+        return absolutePath;
     }
 
     public SqlSugarClient GetNewDbObj()
     {
         var newConnection = $"datasource={DataDirectoryPath}/{DatabaseFileBaseName}.{DbExtension}";
+        LoggingService.Debug("[Database] 创建数据库实例 | Connection={Connection}", newConnection);
         return GetNewDb(newConnection);
     }
 }

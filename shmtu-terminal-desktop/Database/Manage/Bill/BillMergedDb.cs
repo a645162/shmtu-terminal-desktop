@@ -1,3 +1,4 @@
+using shmtu.terminal.desktop.Services;
 using System.Text.Json;
 using shmtu.terminal.desktop.Database.Common;
 using shmtu.terminal.desktop.Database.Source.Identity;
@@ -15,23 +16,30 @@ public static class BillMergedDb
 
     public static void InitTable(int identityId)
     {
+        LoggingService.Debug("[BillMergedDb] 初始化合并账单表 | IdentityId={IdentityId}", identityId);
         EnsureDirectoryExists(identityId);
         var db = GetDb(identityId);
         if (!db.DbMaintenance.IsAnyTable(typeof(BillMerged).FullName))
         {
+            LoggingService.Information("[BillMergedDb] 创建合并账单表 | IdentityId={IdentityId}", identityId);
             db.CodeFirst.InitTables(typeof(BillMerged));
         }
         if (!db.DbMaintenance.IsAnyTable(typeof(OperationLog).FullName))
         {
+            LoggingService.Information("[BillMergedDb] 创建操作日志表 | IdentityId={IdentityId}", identityId);
             db.CodeFirst.InitTables(typeof(OperationLog));
         }
+        LoggingService.Debug("[BillMergedDb] 合并账单表初始化完成 | IdentityId={IdentityId}", identityId);
     }
 
     private static void EnsureDirectoryExists(int identityId)
     {
         var dir = Path.Combine(BaseDbSource.DataDirectoryPath, "identity");
         if (!Directory.Exists(dir))
+        {
+            LoggingService.Debug("[BillMergedDb] 创建身份数据库目录 | Path={Path}", dir);
             Directory.CreateDirectory(dir);
+        }
     }
 
     /// <summary>
@@ -47,19 +55,29 @@ public static class BillMergedDb
         string? searchText,
         string? classificationType)
     {
+        LoggingService.Debug("[BillMergedDb] 过滤查询合并账单 | IdentityId={IdentityId} | Page={Page} | Search={Search} | Type={Type}",
+            identityId, pageIndex, searchText, classificationType);
+
         var db = GetDb(identityId);
         var query = db.Queryable<BillMerged>();
 
         // 时间范围过滤
         if (startTime.HasValue)
+        {
+            LoggingService.Verbose("[BillMergedDb] 添加时间范围过滤 | Start={Start}", startTime.Value);
             query = query.Where(b => b.Timestamp >= startTime.Value);
+        }
         if (endTime.HasValue)
+        {
+            LoggingService.Verbose("[BillMergedDb] 添加时间范围过滤 | End={End}", endTime.Value);
             query = query.Where(b => b.Timestamp <= endTime.Value);
+        }
 
         // 搜索文本过滤（ItemType / TargetUser / Number）
         if (!string.IsNullOrWhiteSpace(searchText))
         {
             var search = searchText.ToLowerInvariant();
+            LoggingService.Verbose("[BillMergedDb] 添加搜索过滤 | Search={Search}", search);
             query = query.Where(b =>
                 b.ItemType!.Contains(search) ||
                 b.TargetUser!.Contains(search) ||
@@ -69,6 +87,7 @@ public static class BillMergedDb
         // 分类类型过滤 — 内联表达式，避免 C# 方法无法转译 SQL
         if (!string.IsNullOrWhiteSpace(classificationType))
         {
+            LoggingService.Verbose("[BillMergedDb] 添加分类过滤 | Type={Type}", classificationType);
             query = classificationType.ToLowerInvariant() switch
             {
                 "充值" => query.Where(b => b.ItemType!.Contains("充值") || b.ItemType!.Contains("中行云充值") || b.ItemType!.Contains("微信充值")),
@@ -83,12 +102,14 @@ public static class BillMergedDb
 
         // 获取总数（不带排序和分页）
         var count = query.Count();
+        LoggingService.Debug("[BillMergedDb] 查询总数 | TotalCount={Count}", count);
 
         // 分页 + 排序
         var bills = query
             .OrderBy(b => b.Timestamp, OrderByType.Desc)
             .ToPageList(pageIndex, pageSize);
 
+        LoggingService.Debug("[BillMergedDb] 过滤查询完成 | Count={Count} | Total={Total}", bills.Count, count);
         return (bills, count);
     }
 
@@ -97,10 +118,13 @@ public static class BillMergedDb
     /// </summary>
     public static List<BillMerged> GetAll(int identityId, int pageIndex = 1, int pageSize = 50)
     {
+        LoggingService.Debug("[BillMergedDb] 分页查询合并账单 | IdentityId={IdentityId} | Page={Page}", identityId, pageIndex);
         var db = GetDb(identityId);
-        return db.Queryable<BillMerged>()
+        var result = db.Queryable<BillMerged>()
             .OrderBy(b => b.Timestamp, OrderByType.Desc)
             .ToPageList(pageIndex, pageSize);
+        LoggingService.Debug("[BillMergedDb] 合并账单查询完成 | Count={Count}", result.Count);
+        return result;
     }
 
     /// <summary>
@@ -108,51 +132,75 @@ public static class BillMergedDb
     /// </summary>
     public static List<BillMerged> GetAll(int identityId)
     {
+        LoggingService.Information("[BillMergedDb] 查询所有合并账单 | IdentityId={IdentityId}", identityId);
         var db = GetDb(identityId);
-        return db.Queryable<BillMerged>()
+        var result = db.Queryable<BillMerged>()
             .OrderBy(b => b.Timestamp, OrderByType.Desc)
             .ToList();
+        LoggingService.Information("[BillMergedDb] 合并账单查询完成 | Count={Count}", result.Count);
+        return result;
     }
 
     public static List<BillMerged> GetByTimeRange(int identityId, long startTime, long endTime)
     {
+        LoggingService.Debug("[BillMergedDb] 时间范围查询 | IdentityId={IdentityId} | Start={Start} | End={End}",
+            identityId, startTime, endTime);
         var db = GetDb(identityId);
-        return db.Queryable<BillMerged>()
+        var result = db.Queryable<BillMerged>()
             .Where(b => b.Timestamp >= startTime && b.Timestamp <= endTime)
             .OrderBy(b => b.Timestamp, OrderByType.Desc)
             .ToList();
+        LoggingService.Debug("[BillMergedDb] 时间范围查询完成 | Count={Count}", result.Count);
+        return result;
     }
 
     public static BillMerged? GetById(int identityId, int id)
     {
+        LoggingService.Verbose("[BillMergedDb] 根据ID查询 | IdentityId={IdentityId} | Id={Id}", identityId, id);
         var db = GetDb(identityId);
         return db.Queryable<BillMerged>().Where(b => b.Id == id).First();
     }
 
     public static bool ContainsByNumberList(int identityId, string numberListJson)
     {
+        LoggingService.Verbose("[BillMergedDb] 检查交易号列表是否存在 | IdentityId={IdentityId}", identityId);
         var db = GetDb(identityId);
         return db.Queryable<BillMerged>().Where(b => b.NumberList == numberListJson).Any();
     }
 
     public static int Append(int identityId, BillMerged bill)
     {
+        LoggingService.Debug("[BillMergedDb] 追加合并账单 | IdentityId={IdentityId} | Number={Number}",
+            identityId, bill.Number);
         var db = GetDb(identityId);
         bill.SyncedAt = DateTime.Now.ToString("o");
-        return db.Insertable(bill).ExecuteReturnIdentity();
+        var result = db.Insertable(bill).ExecuteReturnIdentity();
+        LoggingService.Debug("[BillMergedDb] 合并账单追加成功 | Id={Id}", result);
+        return result;
     }
 
     public static void AppendRange(int identityId, List<BillMerged> bills)
     {
-        if (bills.Count == 0) return;
+        if (bills.Count == 0)
+        {
+            LoggingService.Verbose("[BillMergedDb] 批量追加为空，跳过");
+            return;
+        }
+
+        LoggingService.Information("[BillMergedDb] 批量追加合并账单 | IdentityId={IdentityId} | Count={Count}",
+            identityId, bills.Count);
         var db = GetDb(identityId);
         var now = DateTime.Now.ToString("o");
         foreach (var bill in bills) bill.SyncedAt = now;
         db.Insertable(bills).ExecuteCommand();
+        LoggingService.Information("[BillMergedDb] 批量追加完成 | Count={Count}", bills.Count);
     }
 
     public static int AddManual(int identityId, BillMerged bill)
     {
+        LoggingService.Information("[BillMergedDb] 手动添加合并账单 | IdentityId={IdentityId} | Type={Type} | Money={Money}",
+            identityId, bill.ItemType, bill.MoneyStr);
+
         var db = GetDb(identityId);
         bill.IsManual = true;
         bill.SyncedAt = DateTime.Now.ToString("o");
@@ -170,20 +218,28 @@ public static class BillMergedDb
                 AccountId = bill.SourceAccountId,
             }).ExecuteCommand();
             db.Ado.CommitTran();
+            LoggingService.Information("[BillMergedDb] 手动添加完成 | Id={Id}", id);
             return id;
         }
-        catch
+        catch (Exception ex)
         {
             db.Ado.RollbackTran();
+            LoggingService.Error(ex, "[BillMergedDb] 手动添加失败，已回滚");
             throw;
         }
     }
 
     public static bool DeleteManual(int identityId, int id)
     {
+        LoggingService.Warning("[BillMergedDb] 手动删除合并账单 | IdentityId={IdentityId} | Id={Id}", identityId, id);
+
         var db = GetDb(identityId);
         var bill = GetById(identityId, id);
-        if (bill == null) return false;
+        if (bill == null)
+        {
+            LoggingService.Warning("[BillMergedDb] 要删除的账单不存在 | Id={Id}", id);
+            return false;
+        }
 
         db.Ado.BeginTran();
         try
@@ -198,30 +254,41 @@ public static class BillMergedDb
                 AccountId = bill.SourceAccountId,
             }).ExecuteCommand();
             db.Ado.CommitTran();
+            LoggingService.Information("[BillMergedDb] 手动删除完成 | Id={Id}", id);
             return true;
         }
-        catch
+        catch (Exception ex)
         {
             db.Ado.RollbackTran();
+            LoggingService.Error(ex, "[BillMergedDb] 手动删除失败，已回滚");
             throw;
         }
     }
 
     public static bool Update(int identityId, BillMerged bill)
     {
+        LoggingService.Information("[BillMergedDb] 更新合并账单 | IdentityId={IdentityId} | Id={Id}", identityId, bill.Id);
         var db = GetDb(identityId);
-        return db.Updateable(bill).ExecuteCommand() > 0;
+        var result = db.Updateable(bill).ExecuteCommand() > 0;
+        LoggingService.Information("[BillMergedDb] 更新完成 | Success={Success}", result);
+        return result;
     }
 
     public static int GetCount(int identityId)
     {
+        LoggingService.Verbose("[BillMergedDb] 获取合并账单总数 | IdentityId={IdentityId}", identityId);
         var db = GetDb(identityId);
-        return db.Queryable<BillMerged>().Count();
+        var result = db.Queryable<BillMerged>().Count();
+        LoggingService.Debug("[BillMergedDb] 合并账单总数 | Count={Count}", result);
+        return result;
     }
 
     public static (double totalExpense, double totalIncome, int count) GetSummary(
         int identityId, long? startTime = null, long? endTime = null)
     {
+        LoggingService.Debug("[BillMergedDb] 获取账单汇总 | IdentityId={IdentityId} | Start={Start} | End={End}",
+            identityId, startTime, endTime);
+
         var db = GetDb(identityId);
         var query = db.Queryable<BillMerged>();
 
@@ -238,11 +305,18 @@ public static class BillMergedDb
             if (money < 0) totalExpense += money;
             else totalIncome += money;
         }
+
+        LoggingService.Information("[BillMergedDb] 账单汇总完成 | Expense={Expense} | Income={Income} | Count={Count}",
+            totalExpense, totalIncome, bills.Count);
+
         return (totalExpense, totalIncome, bills.Count);
     }
 
     public static BillMerged FromBillItemInfo(shmtu.datatype.bill.BillItemInfo item, string sourceAccountId)
     {
+        LoggingService.Verbose("[BillMergedDb] 转换 BillItemInfo 到 BillMerged | AccountId={AccountId} | Number={Number}",
+            sourceAccountId, item.Number);
+
         return new BillMerged
         {
             DateStr = item.DateString,
@@ -270,6 +344,8 @@ public static class BillMergedDb
 
     public static BillMerged FromBillOriginal(BillOriginal original)
     {
+        LoggingService.Verbose("[BillMergedDb] 转换 BillOriginal 到 BillMerged | Number={Number}", original.Number);
+
         return new BillMerged
         {
             DateStr = original.DateStr,

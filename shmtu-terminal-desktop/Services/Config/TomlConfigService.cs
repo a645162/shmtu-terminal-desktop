@@ -30,9 +30,11 @@ public static class TomlConfigService
     public static AppConfig LoadAppConfig()
     {
         var path = GetAppConfigPath();
+        LoggingService.Debug("[TomlConfig] 尝试加载应用配置 | Path={Path}", path);
 
         if (!File.Exists(path))
         {
+            LoggingService.Warning("[TomlConfig] 配置文件不存在，创建默认配置 | Path={Path}", path);
             var defaultConfig = new AppConfig();
             SaveAppConfig(defaultConfig);
             return defaultConfig;
@@ -41,12 +43,16 @@ public static class TomlConfigService
         try
         {
             var tomlText = File.ReadAllText(path);
+            LoggingService.Verbose("[TomlConfig] TOML 文件已读取 | Size={Size} bytes", tomlText.Length);
             var model = TomlSerializer.Deserialize<TomlTable>(tomlText);
-            return model is null ? new AppConfig() : ParseAppConfig(model);
+            var config = model is null ? new AppConfig() : ParseAppConfig(model);
+            LoggingService.Information("[TomlConfig] 应用配置加载成功 | Security={Sec} | Captcha={Cap} | Sync={Sync}",
+                config.Security.EnableStartupProtection, config.Captcha.Mode, config.Sync.MaxPages);
+            return config;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"加载配置文件失败: {ex.Message}");
+            LoggingService.Error(ex, "[TomlConfig] 加载配置文件失败，使用默认配置 | Path={Path}", path);
             return new AppConfig();
         }
     }
@@ -64,10 +70,11 @@ public static class TomlConfigService
         try
         {
             File.WriteAllText(path, tomlText, Encoding.UTF8);
+            LoggingService.Debug("[TomlConfig] 应用配置保存成功 | Path={Path} | Size={Size} bytes", path, tomlText.Length);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"保存配置文件失败: {ex.Message}");
+            LoggingService.Error(ex, "[TomlConfig] 保存配置文件失败 | Path={Path}", path);
         }
     }
 
@@ -76,9 +83,11 @@ public static class TomlConfigService
     /// </summary>
     public static void UpdateAppConfig(Action<AppConfig> updateAction)
     {
+        LoggingService.Debug("[TomlConfig] 更新应用配置");
         var config = LoadAppConfig();
         updateAction(config);
         SaveAppConfig(config);
+        LoggingService.Information("[TomlConfig] 应用配置更新完成");
     }
 
     private static AppConfig ParseAppConfig(TomlTable model)
@@ -90,6 +99,7 @@ public static class TomlConfigService
         {
             config.Security.EnableStartupProtection = GetBool(sec, "enable_startup_protection", false);
             config.Security.PasswordHash = GetString(sec, "password_hash", "");
+            LoggingService.Verbose("[TomlConfig] 解析 [security] | PasswordProtected={P}", config.Security.EnableStartupProtection);
         }
 
         // [identity]
@@ -97,6 +107,7 @@ public static class TomlConfigService
         {
             config.Identity.RememberDefault = GetBool(id, "remember_default", false);
             config.Identity.DefaultIdentityId = GetInt(id, "default_identity_id", 0);
+            LoggingService.Verbose("[TomlConfig] 解析 [identity] | DefaultId={Id}", config.Identity.DefaultIdentityId);
         }
 
         // [captcha]
@@ -107,6 +118,7 @@ public static class TomlConfigService
             config.Captcha.RemoteOcrPort = GetInt(cap, "remote_ocr_port", 0);
             config.Captcha.OnnxModelPath = GetString(cap, "onnx_model_path", "");
             config.Captcha.OcrRetryCount = GetInt(cap, "ocr_retry_count", 3);
+            LoggingService.Verbose("[TomlConfig] 解析 [captcha] | Mode={Mode}", config.Captcha.Mode);
         }
 
         // [sync]
@@ -115,6 +127,7 @@ public static class TomlConfigService
             config.Sync.MaxPages = GetInt(sync, "max_pages", 100);
             config.Sync.EarlyStopThreshold = GetInt(sync, "early_stop_threshold", 5);
             config.Sync.AutoMergeAfterSync = GetBool(sync, "auto_merge_after_sync", true);
+            LoggingService.Verbose("[TomlConfig] 解析 [sync] | MaxPages={P} | EarlyStop={T}", config.Sync.MaxPages, config.Sync.EarlyStopThreshold);
         }
 
         // [data]
@@ -122,6 +135,7 @@ public static class TomlConfigService
         {
             config.Data.DataDirectory = GetString(data, "data_directory", "Data");
             config.Data.SnapshotKeepCount = GetInt(data, "snapshot_keep_count", 10);
+            LoggingService.Verbose("[TomlConfig] 解析 [data] | DataDir={Dir} | SnapshotKeep={K}", config.Data.DataDirectory, config.Data.SnapshotKeepCount);
         }
 
         // [classification]
@@ -129,6 +143,7 @@ public static class TomlConfigService
         {
             config.Classification.RulesPath = GetString(cls, "rules_path", "");
             config.Classification.RulesUpdateUrl = GetString(cls, "rules_update_url", "");
+            LoggingService.Verbose("[TomlConfig] 解析 [classification] | HasRulesPath={H}", !string.IsNullOrEmpty(config.Classification.RulesPath));
         }
 
         // [update]
@@ -137,6 +152,7 @@ public static class TomlConfigService
             config.Update.AutoCheck = GetBool(upd, "auto_check", true);
             config.Update.CheckIntervalHours = GetInt(upd, "check_interval_hours", 24);
             config.Update.LastCheckTime = GetString(upd, "last_check_time", "");
+            LoggingService.Verbose("[TomlConfig] 解析 [update] | AutoCheck={A}", config.Update.AutoCheck);
         }
 
         // [ui]
@@ -144,8 +160,8 @@ public static class TomlConfigService
         {
             config.Ui.Theme = GetString(ui, "theme", "light");
             config.Ui.Language = GetString(ui, "language", "zh-CN");
+            LoggingService.Verbose("[TomlConfig] 解析 [ui] | Theme={Theme} | Lang={Lang}", config.Ui.Theme, config.Ui.Language);
         }
-
 
         // [semester]
         if (model.TryGetValue("semester", out var semObj) && semObj is TomlTable sem)
@@ -155,6 +171,7 @@ public static class TomlConfigService
                 config.Semester.StartDate = sdt;
             if (sem.TryGetValue("end_date", out var ed) && ed is string endStr && DateTime.TryParse(endStr, out var edt))
                 config.Semester.EndDate = edt;
+            LoggingService.Verbose("[TomlConfig] 解析 [semester] | Name={Name}", config.Semester.SemesterName);
         }
 
         return config;
@@ -211,7 +228,6 @@ public static class TomlConfigService
         sb.AppendLine($"theme = \"{config.Ui.Theme}\"");
         sb.AppendLine($"language = \"{config.Ui.Language}\"");
 
-
         sb.AppendLine("[semester]");
         sb.AppendLine($"semester_name = \"{config.Semester.SemesterName}\"");
         sb.AppendLine($"start_date = \"{config.Semester.StartDate:yyyy-MM-dd}\"");
@@ -242,9 +258,11 @@ public static class TomlConfigService
     {
         var appConfig = LoadAppConfig();
         var path = GetClassificationRulesPath(appConfig);
+        LoggingService.Debug("[TomlConfig] 加载分类规则 | Path={Path}", path);
 
         if (!File.Exists(path))
         {
+            LoggingService.Warning("[TomlConfig] 分类规则文件不存在，创建默认规则");
             var defaultRules = CreateDefaultClassificationRules();
             SaveClassificationRules(defaultRules);
             return defaultRules;
@@ -253,11 +271,14 @@ public static class TomlConfigService
         try
         {
             var tomlText = File.ReadAllText(path);
-            return ParseClassificationRules(tomlText);
+            var rules = ParseClassificationRules(tomlText);
+            LoggingService.Information("[TomlConfig] 分类规则加载成功 | TypeCount={T} | ScheduleCount={S}",
+                rules.Type.Count, rules.Schedule.Count);
+            return rules;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"加载分类规则失败: {ex.Message}");
+            LoggingService.Error(ex, "[TomlConfig] 加载分类规则失败，使用默认规则");
             return CreateDefaultClassificationRules();
         }
     }
@@ -273,7 +294,15 @@ public static class TomlConfigService
         var path = GetClassificationRulesPath(appConfig);
         var tomlText = SerializeClassificationRules(rules);
 
-        File.WriteAllText(path, tomlText, Encoding.UTF8);
+        try
+        {
+            File.WriteAllText(path, tomlText, Encoding.UTF8);
+            LoggingService.Debug("[TomlConfig] 分类规则保存成功 | Path={Path}", path);
+        }
+        catch (Exception ex)
+        {
+            LoggingService.Error(ex, "[TomlConfig] 保存分类规则失败 | Path={Path}", path);
+        }
     }
 
     /// <summary>
@@ -281,13 +310,20 @@ public static class TomlConfigService
     /// </summary>
     public static async Task<bool> UpdateClassificationRulesFromRemote(string url, CancellationToken cancellationToken = default)
     {
+        LoggingService.Information("[TomlConfig] 尝试从远程更新分类规则 | URL={Url}", url);
+
         try
         {
             using var httpClient = new System.Net.Http.HttpClient();
             var response = await httpClient.GetAsync(url, cancellationToken);
-            if (!response.IsSuccessStatusCode) return false;
+            if (!response.IsSuccessStatusCode)
+            {
+                LoggingService.Warning("[TomlConfig] 远程获取分类规则失败 | StatusCode={Code}", response.StatusCode);
+                return false;
+            }
 
             var tomlText = await response.Content.ReadAsStringAsync(cancellationToken);
+            LoggingService.Verbose("[TomlConfig] 远程规则已下载 | Size={Size} bytes", tomlText.Length);
 
             // 验证 TOML 格式
             TomlSerializer.Deserialize<TomlTable>(tomlText);
@@ -299,15 +335,17 @@ public static class TomlConfigService
             {
                 var backupPath = path + ".bak";
                 File.Copy(path, backupPath, true);
+                LoggingService.Debug("[TomlConfig] 已备份旧规则 | BackupPath={Path}", backupPath);
             }
 
             // 保存新规则
             File.WriteAllText(path, tomlText, Encoding.UTF8);
+            LoggingService.Information("[TomlConfig] 远程分类规则更新成功");
             return true;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"更新分类规则失败: {ex.Message}");
+            LoggingService.Error(ex, "[TomlConfig] 更新分类规则失败");
             return false;
         }
     }
@@ -543,6 +581,7 @@ public static class TomlConfigService
     {
         if (!Directory.Exists(DataDirectory))
         {
+            LoggingService.Debug("[TomlConfig] 创建数据目录 | Path={Path}", DataDirectory);
             Directory.CreateDirectory(DataDirectory);
         }
     }
