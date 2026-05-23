@@ -2,7 +2,51 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="80"
              x:Class="shmtu.terminal.desktop.Views.Component.CountDown.CountDownWeekUserControl">
-    Welcome to Avalonia!
+
+    <StackPanel Spacing="8">
+        <DockPanel>
+            <TextBlock Text="学期倒计时"
+                       FontSize="14" FontWeight="SemiBold"
+                       DockPanel.Dock="Left"
+                       VerticalAlignment="Center" />
+            <Button Content="配置"
+                    DockPanel.Dock="Right"
+                    HorizontalAlignment="Right"
+                    Classes="Flat"
+                    FontSize="12"
+                    Command="{Binding ConfigureCommand}" />
+        </DockPanel>
+        <StackPanel Orientation="Horizontal" Spacing="24">
+            <StackPanel>
+                <TextBlock Text="当前周次"
+                           FontSize="11"
+                           Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                <TextBlock Text="{Binding CurrentWeek}"
+                           FontSize="20" FontWeight="Bold"
+                           Foreground="#1976D2" />
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="距放假"
+                           FontSize="11"
+                           Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                <TextBlock Text="{Binding DaysUntilHoliday}"
+                           FontSize="20" FontWeight="Bold"
+                           Foreground="#FF6F00" />
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="学期进度"
+                           FontSize="11"
+                           Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                <ProgressBar Value="{Binding SemesterProgress}"
+                             Maximum="100"
+                             Width="120"
+                             Height="8"
+                             VerticalAlignment="Center"
+                             Foreground="#1976D2" />
+            </StackPanel>
+        </StackPanel>
+    </StackPanel>
+
 </UserControl>

@@ -1,0 +1,50 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="200"
+             x:Class="shmtu.terminal.desktop.Views.Component.ChartUserControl">
+
+    <!-- Chart container - placeholder for LiveCharts2/ScottPlot integration -->
+    <Border Background="{DynamicResource MaterialDesignCardBackground}"
+            CornerRadius="4">
+        <Grid>
+            <!-- Placeholder: actual chart control will be added in ViewModel integration -->
+            <ItemsControl ItemsSource="{Binding DataPoints}"
+                          Margin="16">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center"
+                                    Spacing="24" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel HorizontalAlignment="Center"
+                                    Width="48" Spacing="4">
+                            <Border Background="{Binding BarColor}"
+                                    CornerRadius="4,4,0,0"
+                                    Height="{Binding BarHeight}"
+                                    Width="32"
+                                    HorizontalAlignment="Center" />
+                            <TextBlock Text="{Binding Label}"
+                                       FontSize="10"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- Empty state -->
+            <Panel IsVisible="{Binding IsEmpty}">
+                <TextBlock Text="暂无数据"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource MaterialDesignBodyLight}" />
+            </Panel>
+        </Grid>
+    </Border>
+
+</UserControl>

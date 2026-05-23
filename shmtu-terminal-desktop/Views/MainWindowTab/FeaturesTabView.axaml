@@ -1,0 +1,271 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="using:Material.Styles"
+             xmlns:materialControls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+             mc:Ignorable="d" d:DesignWidth="960" d:DesignHeight="560"
+             x:Class="shmtu.terminal.desktop.Views.MainWindowTab.FeaturesTabView">
+
+    <StackPanel Margin="24,16" Spacing="16">
+
+        <TextBlock Text="功能大全"
+                   FontSize="20" FontWeight="Bold"
+                   Margin="0,0,0,8" />
+
+        <!-- Feature Cards Grid -->
+        <UniformGrid Rows="3" Columns="3">
+
+            <!-- Statistics -->
+            <materialControls:Card Margin="4" Padding="16">
+                <materialControls:Card.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="打开统计分析"
+                                  Command="{Binding OpenStatisticsCommand}" />
+                    </ContextMenu>
+                </materialControls:Card.ContextMenu>
+                <Button Classes="Flat" HorizontalAlignment="Stretch"
+                        Command="{Binding OpenStatisticsCommand}"
+                        HorizontalContentAlignment="Left">
+                    <StackPanel Spacing="8" Orientation="Horizontal">
+                        <TextBlock Text="&#xE8D0;" FontSize="28"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   VerticalAlignment="Center"
+                                   Foreground="#1976D2" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="统计分析" FontSize="14" FontWeight="Medium" />
+                            <TextBlock Text="消费趋势、分类占比" FontSize="11"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Button>
+            </materialControls:Card>
+
+            <!-- Export -->
+            <materialControls:Card Margin="4" Padding="16">
+                <materialControls:Card.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="打开数据导出"
+                                  Command="{Binding OpenDataExportCommand}" />
+                    </ContextMenu>
+                </materialControls:Card.ContextMenu>
+                <Button Classes="Flat" HorizontalAlignment="Stretch"
+                        Command="{Binding OpenDataExportCommand}"
+                        HorizontalContentAlignment="Left">
+                    <StackPanel Spacing="8" Orientation="Horizontal">
+                        <TextBlock Text="&#xE896;" FontSize="28"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   VerticalAlignment="Center"
+                                   Foreground="#4CAF50" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="数据导出" FontSize="14" FontWeight="Medium" />
+                            <TextBlock Text="CSV / JSON / 钱迹" FontSize="11"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Button>
+            </materialControls:Card>
+
+            <!-- Import -->
+            <materialControls:Card Margin="4" Padding="16">
+                <materialControls:Card.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="打开数据导入"
+                                  Command="{Binding OpenDataImportCommand}" />
+                    </ContextMenu>
+                </materialControls:Card.ContextMenu>
+                <Button Classes="Flat" HorizontalAlignment="Stretch"
+                        Command="{Binding OpenDataImportCommand}"
+                        HorizontalContentAlignment="Left">
+                    <StackPanel Spacing="8" Orientation="Horizontal">
+                        <TextBlock Text="&#xE898;" FontSize="28"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   VerticalAlignment="Center"
+                                   Foreground="#FF9800" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="数据导入" FontSize="14" FontWeight="Medium" />
+                            <TextBlock Text="从JSON文件恢复" FontSize="11"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Button>
+            </materialControls:Card>
+
+            <!-- Captcha Test -->
+            <materialControls:Card Margin="4" Padding="16">
+                <materialControls:Card.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="打开验证码测试"
+                                  Command="{Binding OpenCaptchaTestCommand}" />
+                    </ContextMenu>
+                </materialControls:Card.ContextMenu>
+                <Button Classes="Flat" HorizontalAlignment="Stretch"
+                        Command="{Binding OpenCaptchaTestCommand}"
+                        HorizontalContentAlignment="Left">
+                    <StackPanel Spacing="8" Orientation="Horizontal">
+                        <TextBlock Text="&#xE72E;" FontSize="28"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   VerticalAlignment="Center"
+                                   Foreground="#9C27B0" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="验证码测试" FontSize="14" FontWeight="Medium" />
+                            <TextBlock Text="OCR / ONNX 识别" FontSize="11"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Button>
+            </materialControls:Card>
+
+            <!-- Identity Management -->
+            <materialControls:Card Margin="4" Padding="16">
+                <materialControls:Card.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="打开身份管理"
+                                  Command="{Binding OpenIdentityManagerCommand}" />
+                        <MenuItem Header="添加新身份"
+                                  Command="{Binding AddIdentityCommand}" />
+                    </ContextMenu>
+                </materialControls:Card.ContextMenu>
+                <Button Classes="Flat" HorizontalAlignment="Stretch"
+                        Command="{Binding OpenIdentityManagerCommand}"
+                        HorizontalContentAlignment="Left">
+                    <StackPanel Spacing="8" Orientation="Horizontal">
+                        <TextBlock Text="&#xE77B;" FontSize="28"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   VerticalAlignment="Center"
+                                   Foreground="#2196F3" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="身份管理" FontSize="14" FontWeight="Medium" />
+                            <TextBlock Text="身份与账号管理" FontSize="11"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Button>
+            </materialControls:Card>
+
+            <!-- Settings -->
+            <materialControls:Card Margin="4" Padding="16">
+                <materialControls:Card.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="打开设置"
+                                  Command="{Binding OpenSettingsCommand}" />
+                    </ContextMenu>
+                </materialControls:Card.ContextMenu>
+                <Button Classes="Flat" HorizontalAlignment="Stretch"
+                        Command="{Binding OpenSettingsCommand}"
+                        HorizontalContentAlignment="Left">
+                    <StackPanel Spacing="8" Orientation="Horizontal">
+                        <TextBlock Text="&#xE713;" FontSize="28"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   VerticalAlignment="Center"
+                                   Foreground="#607D8B" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="应用设置" FontSize="14" FontWeight="Medium" />
+                            <TextBlock Text="安全、验证码、同步" FontSize="11"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Button>
+            </materialControls:Card>
+
+            <!-- Snapshot -->
+            <materialControls:Card Margin="4" Padding="16">
+                <materialControls:Card.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="打开快照管理"
+                                  Command="{Binding OpenSnapshotCommand}" />
+                        <MenuItem Header="立即创建快照"
+                                  Command="{Binding CreateSnapshotCommand}" />
+                    </ContextMenu>
+                </materialControls:Card.ContextMenu>
+                <Button Classes="Flat" HorizontalAlignment="Stretch"
+                        Command="{Binding OpenSnapshotCommand}"
+                        HorizontalContentAlignment="Left">
+                    <StackPanel Spacing="8" Orientation="Horizontal">
+                        <TextBlock Text="&#xEB9F;" FontSize="28"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   VerticalAlignment="Center"
+                                   Foreground="#795548" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="数据快照" FontSize="14" FontWeight="Medium" />
+                            <TextBlock Text="备份与恢复" FontSize="11"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Button>
+            </materialControls:Card>
+
+            <!-- About -->
+            <materialControls:Card Margin="4" Padding="16">
+                <materialControls:Card.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="查看关于"
+                                  Command="{Binding OpenAboutCommand}" />
+                    </ContextMenu>
+                </materialControls:Card.ContextMenu>
+                <Button Classes="Flat" HorizontalAlignment="Stretch"
+                        Command="{Binding OpenAboutCommand}"
+                        HorizontalContentAlignment="Left">
+                    <StackPanel Spacing="8" Orientation="Horizontal">
+                        <TextBlock Text="&#xE946;" FontSize="28"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   VerticalAlignment="Center"
+                                   Foreground="#009688" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="关于" FontSize="14" FontWeight="Medium" />
+                            <TextBlock Text="版本与开发者" FontSize="11"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Button>
+            </materialControls:Card>
+
+            <!-- Check Update -->
+            <materialControls:Card Margin="4" Padding="16">
+                <materialControls:Card.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="检查更新"
+                                  Command="{Binding CheckUpdateCommand}" />
+                    </ContextMenu>
+                </materialControls:Card.ContextMenu>
+                <Button Classes="Flat" HorizontalAlignment="Stretch"
+                        Command="{Binding CheckUpdateCommand}"
+                        HorizontalContentAlignment="Left">
+                    <StackPanel Spacing="8" Orientation="Horizontal">
+                        <TextBlock Text="&#xE895;" FontSize="28"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   VerticalAlignment="Center"
+                                   Foreground="#3F51B5" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="检查更新" FontSize="14" FontWeight="Medium" />
+                            <TextBlock Text="查看最新版本" FontSize="11"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Button>
+            </materialControls:Card>
+
+        </UniformGrid>
+
+        <!-- Hot Water Query - Disabled -->
+        <materialControls:Card Margin="4,8" Padding="16" Opacity="0.5">
+            <Button Classes="Flat" HorizontalAlignment="Stretch"
+                    IsEnabled="False"
+                    HorizontalContentAlignment="Left">
+                <StackPanel Spacing="8" Orientation="Horizontal">
+                    <TextBlock Text="&#xE7C3;" FontSize="28"
+                               FontFamily="Segoe MDL2 Assets"
+                               VerticalAlignment="Center"
+                               Foreground="#757575" />
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="热水查询" FontSize="14" FontWeight="Medium" />
+                        <TextBlock Text="API维护中，敬请期待" FontSize="11"
+                                   Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                    </StackPanel>
+                </StackPanel>
+            </Button>
+        </materialControls:Card>
+
+    </StackPanel>
+
+</UserControl>

@@ -13,6 +13,7 @@
     <Application.Styles>
         <!-- <FluentTheme /> -->
         <themes:MaterialTheme PrimaryColor="Blue" SecondaryColor="Lime" />
+        <StyleInclude Source="avares://Material.Avalonia.DataGrid/DataGrid.xaml" />
     </Application.Styles>
 
 </Application>

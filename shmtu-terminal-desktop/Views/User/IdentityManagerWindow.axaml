@@ -1,0 +1,240 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:material="using:Material.Styles"
+        xmlns:materialControls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+        xmlns:vm="using:shmtu.terminal.desktop.ViewModels.User"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="550"
+        x:Class="shmtu.terminal.desktop.Views.User.IdentityManagerWindow"
+        x:DataType="vm:IdentityManagerViewModel"
+        Title="身份与账号管理"
+        Width="800" Height="550"
+        WindowStartupLocation="CenterOwner"
+        MinWidth="700" MinHeight="450"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="{DynamicResource MaterialDesignBackground}">
+
+    <Grid ColumnDefinitions="220,*">
+
+        <!-- Left: Identity List -->
+        <Border Grid.Column="0"
+                Background="{DynamicResource MaterialDesignToolBarBackground}"
+                Padding="12,16">
+            <DockPanel>
+
+                <!-- Identity List Actions -->
+                <StackPanel DockPanel.Dock="Bottom"
+                            Orientation="Horizontal"
+                            Spacing="4"
+                            HorizontalAlignment="Center"
+                            Margin="0,8,0,0">
+                    <Button Content="+"
+                            Command="{Binding AddIdentityCommand}"
+                            ToolTip.Tip="添加身份"
+                            Width="36" Height="36" />
+                    <Button Content="-"
+                            Command="{Binding DeleteIdentityCommand}"
+                            ToolTip.Tip="删除身份"
+                            Width="36" Height="36" />
+                    <Button Content="✎"
+                            Command="{Binding RenameIdentityCommand}"
+                            ToolTip.Tip="重命名"
+                            Width="36" Height="36" />
+                </StackPanel>
+
+                <!-- Identity Label -->
+                <TextBlock DockPanel.Dock="Top"
+                           Text="身份列表"
+                           FontSize="14" FontWeight="SemiBold"
+                           Margin="0,0,0,8" />
+
+                <!-- Identity ListBox -->
+                <ListBox Name="IdentityListBox"
+                         ItemsSource="{Binding Identities}"
+                         SelectedItem="{Binding SelectedIdentity}">
+                    <ListBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="编辑"
+                                      Command="{Binding RenameIdentityCommand}" />
+                            <MenuItem Header="删除"
+                                      Command="{Binding DeleteIdentityCommand}" />
+                            <Separator />
+                            <MenuItem Header="设为默认"
+                                      Command="{Binding SetDefaultIdentityCommand}" />
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="0,4">
+                                <TextBlock Text="{Binding Name}"
+                                           FontSize="14" FontWeight="Medium" />
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock FontSize="11"
+                                               Foreground="{DynamicResource MaterialDesignBodyLight}">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0}个账号">
+                                                <Binding Path="AccountCount" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                    <TextBlock Text="默认"
+                                               FontSize="10"
+                                               Foreground="#1976D2"
+                                               IsVisible="{Binding IsDefault}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+            </DockPanel>
+        </Border>
+
+        <!-- Right: Account List + Details -->
+        <Grid Grid.Column="1" RowDefinitions="*,Auto"
+              Margin="16">
+
+            <!-- Account List -->
+            <DockPanel Grid.Row="0">
+
+                <!-- Add Account Button -->
+                <Button DockPanel.Dock="Top"
+                        Content="+ 添加账号"
+                        Command="{Binding AddAccountCommand}"
+                        HorizontalAlignment="Left"
+                        Classes="Flat"
+                        Margin="0,0,0,8" />
+
+                <!-- Selected Identity Header -->
+                <TextBlock DockPanel.Dock="Top"
+                           Margin="0,0,0,8">
+                    <TextBlock.Text>
+                        <MultiBinding StringFormat="{}{0} 的账号列表">
+                            <Binding Path="SelectedIdentity.Name" />
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
+
+                <!-- Account Cards -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Accounts}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <materialControls:Card Margin="0,0,0,8" Padding="12">
+                                    <materialControls:Card.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="编辑"
+                                                      Command="{Binding $parent[Window].DataContext.EditAccountCommand}" />
+                                            <MenuItem Header="删除"
+                                                      Command="{Binding $parent[Window].DataContext.DeleteAccountCommand}" />
+                                            <Separator />
+                                            <MenuItem Header="设为默认"
+                                                      Command="{Binding $parent[Window].DataContext.SetDefaultAccountCommand}" />
+                                        </ContextMenu>
+                                    </materialControls:Card.ContextMenu>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock FontSize="14" FontWeight="Medium">
+                                                <TextBlock.Text>
+                                                    <MultiBinding StringFormat="{}学号: {0}">
+                                                        <Binding Path="AccountId" />
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                            <TextBlock FontSize="12"
+                                                       Foreground="{DynamicResource MaterialDesignBodyLight}">
+                                                <TextBlock.Text>
+                                                    <MultiBinding StringFormat="{}名称: {0}">
+                                                        <Binding Path="AccountName" />
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock FontSize="11"
+                                                           Foreground="#4CAF50"
+                                                           Text="已启用"
+                                                           IsVisible="{Binding Enable}" />
+                                                <TextBlock FontSize="11"
+                                                           Foreground="#F44336"
+                                                           Text="已禁用"
+                                                           IsVisible="{Binding !Enable}" />
+                                            </StackPanel>
+                                            <TextBlock FontSize="11"
+                                                       Foreground="{DynamicResource MaterialDesignBodyLight}">
+                                                <TextBlock.Text>
+                                                    <MultiBinding StringFormat="{}最后同步: {0}">
+                                                        <Binding Path="LastUpdateTime" />
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1"
+                                                    VerticalAlignment="Center">
+                                            <ToggleButton IsChecked="{Binding Enable}"
+                                                          Content="启用" />
+                                        </StackPanel>
+                                    </Grid>
+                                </materialControls:Card>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+
+            <!-- Account Detail Edit Form -->
+            <materialControls:Card Grid.Row="1"
+                           Padding="16"
+                           IsVisible="{Binding IsAccountSelected}">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="账号详情编辑"
+                               FontSize="14" FontWeight="SemiBold" />
+
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+                          RowSpacing="8">
+
+                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                   Text="账号名称:"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,8,0" />
+                        <TextBox Grid.Row="0" Grid.Column="1"
+                                 Text="{Binding SelectedAccount.AccountName}" />
+
+                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                   Text="学号:"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,8,0" />
+                        <TextBox Grid.Row="1" Grid.Column="1"
+                                 Text="{Binding SelectedAccount.AccountId}" />
+
+                        <TextBlock Grid.Row="2" Grid.Column="0"
+                                   Text="密码:"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,8,0" />
+                        <TextBox Grid.Row="2" Grid.Column="1"
+                                 PasswordChar="*"
+                                 Text="{Binding SelectedAccount.Password}" />
+
+                        <CheckBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
+                                  Content="启用"
+                                  IsChecked="{Binding SelectedAccount.Enable}" />
+
+                        <CheckBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2"
+                                  Content="允许同步"
+                                  IsChecked="{Binding SelectedAccount.EnableUpdate}" />
+                    </Grid>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="保存"
+                                Command="{Binding SaveAccountCommand}"
+                                Classes="Primary" />
+                        <Button Content="删除此账号"
+                                Command="{Binding DeleteAccountCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </materialControls:Card>
+
+        </Grid>
+    </Grid>
+
+</Window>

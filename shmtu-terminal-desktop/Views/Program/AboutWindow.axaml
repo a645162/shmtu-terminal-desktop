@@ -1,0 +1,99 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:material="using:Material.Styles"
+        xmlns:materialControls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
+        x:Class="shmtu.terminal.desktop.Views.Program.AboutWindow"
+        Title="关于 海大终端"
+        Width="400" Height="450"
+        WindowStartupLocation="CenterOwner"
+        SizeToContent="Manual"
+        CanResize="False"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="{DynamicResource MaterialDesignBackground}">
+
+    <StackPanel Margin="32,24" Spacing="16"
+                HorizontalAlignment="Center">
+
+        <!-- App Icon/Logo -->
+        <Border Width="80" Height="80"
+                CornerRadius="16"
+                Background="#1976D2"
+                HorizontalAlignment="Center">
+            <TextBlock Text="海大"
+                       FontSize="22" FontWeight="Bold"
+                       Foreground="White"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center" />
+        </Border>
+
+        <!-- App Name -->
+        <TextBlock Text="海大终端"
+                   FontSize="24" FontWeight="Bold"
+                   HorizontalAlignment="Center" />
+
+        <!-- Version -->
+        <TextBlock Text="{Binding VersionText}"
+                   FontSize="13"
+                   Foreground="{DynamicResource MaterialDesignBodyLight}"
+                   HorizontalAlignment="Center" />
+
+        <!-- Description -->
+        <TextBlock Text="上海海事大学校园终端应用"
+                   FontSize="13"
+                   HorizontalAlignment="Center"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center" />
+
+        <!-- Developer Info -->
+        <materialControls:Card Padding="16" Margin="0,8,0,0">
+            <StackPanel Spacing="8" HorizontalAlignment="Center">
+                <TextBlock Text="开发者: Haomin Kong"
+                           FontSize="13"
+                           HorizontalAlignment="Center" />
+                <Button Classes="Flat"
+                        HorizontalAlignment="Center"
+                        Content="GitHub: github.com/a645162"
+                        Command="{Binding OpenGitHubCommand}" />
+            </StackPanel>
+        </materialControls:Card>
+
+        <!-- Tech Stack -->
+        <materialControls:Card Padding="16">
+            <StackPanel Spacing="4" HorizontalAlignment="Center">
+                <TextBlock Text="技术栈"
+                           FontSize="12" FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,4" />
+                <TextBlock Text="Avalonia / .NET 10"
+                           FontSize="12"
+                           Foreground="{DynamicResource MaterialDesignBodyLight}"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="Material.Avalonia"
+                           FontSize="12"
+                           Foreground="{DynamicResource MaterialDesignBodyLight}"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="SqlSugar / ReactiveUI"
+                           FontSize="12"
+                           Foreground="{DynamicResource MaterialDesignBodyLight}"
+                           HorizontalAlignment="Center" />
+            </StackPanel>
+        </materialControls:Card>
+
+        <!-- Action Buttons -->
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    Spacing="8"
+                    Margin="0,8,0,0">
+            <Button Content="检查更新"
+                    Command="{Binding CheckUpdateCommand}" />
+            <Button Content="开源许可"
+                    Command="{Binding ShowLicenseCommand}"
+                    Classes="Flat" />
+        </StackPanel>
+
+    </StackPanel>
+
+</Window>

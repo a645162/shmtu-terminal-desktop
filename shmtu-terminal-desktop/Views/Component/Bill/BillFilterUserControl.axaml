@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="using:Material.Styles"
+             xmlns:materialControls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="50"
+             x:Class="shmtu.terminal.desktop.Views.Component.Bill.BillFilterUserControl">
+
+    <DockPanel>
+
+        <!-- Sync Button on Right -->
+        <Button DockPanel.Dock="Right"
+                Content="同步"
+                Command="{Binding SyncCommand}"
+                Classes="Primary"
+                Margin="8,0,0,0"
+                VerticalAlignment="Center" />
+
+        <!-- Search Box -->
+        <materialControls:Card DockPanel.Dock="Right"
+                       Padding="0"
+                       Margin="8,0,0,0">
+            <TextBox Watermark="搜索交易名称、对方账户..."
+                     Text="{Binding SearchText}"
+                     Width="220"
+                     VerticalAlignment="Center" />
+        </materialControls:Card>
+
+        <!-- Filter Controls -->
+        <StackPanel Orientation="Horizontal" Spacing="8">
+
+            <!-- Bill Type Filter -->
+            <ComboBox ItemsSource="{Binding BillTypes}"
+                      SelectedItem="{Binding SelectedBillType}"
+                      MinWidth="100"
+                      VerticalAlignment="Center" />
+
+            <!-- Time Range Filter -->
+            <ComboBox ItemsSource="{Binding TimeRanges}"
+                      SelectedItem="{Binding SelectedTimeRange}"
+                      MinWidth="100"
+                      VerticalAlignment="Center" />
+
+            <!-- Custom Date Range (visible when "Custom" is selected) -->
+            <Panel IsVisible="{Binding IsCustomTimeRange}">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <CalendarDatePicker SelectedDate="{Binding StartDate}"
+                                       HorizontalAlignment="Left" />
+                    <TextBlock Text="至"
+                               VerticalAlignment="Center"
+                               Margin="4,0" />
+                    <CalendarDatePicker SelectedDate="{Binding EndDate}"
+                                       HorizontalAlignment="Left" />
+                </StackPanel>
+            </Panel>
+
+        </StackPanel>
+
+    </DockPanel>
+
+</UserControl>

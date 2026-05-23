@@ -1,0 +1,74 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:material="using:Material.Styles"
+        xmlns:materialControls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+        mc:Ignorable="d" d:DesignWidth="380" d:DesignHeight="400"
+        x:Class="shmtu.terminal.desktop.Views.Startup.IdentitySelectWindow"
+        Title="选择身份"
+        Width="380" Height="400"
+        WindowStartupLocation="CenterScreen"
+        SizeToContent="Manual"
+        CanResize="False"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="{DynamicResource MaterialDesignBackground}">
+
+    <StackPanel Margin="24,20" Spacing="16">
+
+        <TextBlock Text="请选择要进入的身份："
+                   FontSize="14" />
+
+        <!-- Identity Radio List -->
+        <ScrollViewer MaxHeight="220"
+                      VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Identities}"
+                          Name="IdentityList">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <materialControls:Card Margin="0,0,0,8" Padding="12">
+                            <RadioButton GroupName="IdentitySelect"
+                                         IsChecked="{Binding IsSelected}">
+                                <StackPanel Margin="4,0,0,0">
+                                    <TextBlock Text="{Binding Name}"
+                                               FontSize="14" FontWeight="Medium" />
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock FontSize="11"
+                                                   Foreground="{DynamicResource MaterialDesignBodyLight}">
+                                            <TextBlock.Text>
+                                                <MultiBinding StringFormat="{}{0}个账号">
+                                                    <Binding Path="AccountCount" />
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                        <TextBlock FontSize="11"
+                                                   Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                   Text="{Binding LastSyncInfo}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </RadioButton>
+                        </materialControls:Card>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Remember Default -->
+        <CheckBox Content="记住默认选择"
+                  IsChecked="{Binding RememberDefault}" />
+
+        <!-- Action Buttons -->
+        <StackPanel Orientation="Horizontal"
+                    Spacing="8"
+                    HorizontalAlignment="Right">
+            <Button Content="管理身份"
+                    Command="{Binding ManageIdentityCommand}"
+                    Classes="Flat" />
+            <Button Content="进入"
+                    Command="{Binding EnterCommand}"
+                    Classes="Primary" />
+        </StackPanel>
+
+    </StackPanel>
+
+</Window>

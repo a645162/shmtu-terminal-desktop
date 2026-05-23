@@ -1,0 +1,19 @@
+<Project>
+    <ItemGroup>
+        <_SolutionBuildProject Include="shmtu-dotnet-lib/Core/shmtu-dotnet-lib/shmtu-dotnet-lib.csproj" />
+        <_SolutionBuildProject Include="shmtu-dotnet-lib/ocr/shmtu-ocr-onnx-lib/shmtu-ocr-onnx-lib.csproj" />
+        <_SolutionBuildProject Include="shmtu-terminal-desktop/shmtu-terminal-desktop.csproj" />
+        <_SolutionBuildProject Include="shmtu-dotnet-lib/Core/shmtu-dotnet-demo/shmtu-dotnet-demo.csproj" />
+        <_SolutionBuildProject Include="shmtu-dotnet-lib/ocr/shmtu-ocr-onnx-demo/shmtu-ocr-onnx-demo.csproj" />
+        <_SolutionBuildProject Include="shmtu-dotnet-lib/ocr/shmtu-ocr-onnx-demo-gui/shmtu-ocr-onnx-demo-gui.csproj" />
+        <_SolutionBuildProject Include="shmtu-dotnet-lib/ocr/shmtu-ocr-onnx-tests/shmtu-ocr-onnx-tests.csproj" />
+    </ItemGroup>
+
+    <Target Name="Build">
+        <MSBuild Projects="@(_SolutionBuildProject)"
+                 Targets="Build"
+                 Properties="Configuration=$(Configuration);Platform=$(Platform)"
+                 BuildInParallel="false"
+                 StopOnFirstFailure="true" />
+    </Target>
+</Project>

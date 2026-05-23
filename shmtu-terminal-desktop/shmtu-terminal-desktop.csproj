@@ -1,11 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
-        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
         <RootNamespace>shmtu.terminal.desktop</RootNamespace>
     </PropertyGroup>
 
@@ -21,21 +22,35 @@
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.16" />
         <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.8" />
-        <PackageReference Include="Material.Avalonia" Version="3.17.0" />
-        <PackageReference Include="Material.Avalonia.DataGrid" Version="3.17.0" />
-        <PackageReference Include="Material.Avalonia.Dialogs" Version="3.17.0" />
-        <!--<PackageReference Include="shmtu-dotnet-lib" Version="1.0.0.3" />-->
-        <PackageReference Include="SqlSugarCore" Version="5.1.4.214" />
+        <PackageReference Include="Material.Avalonia" Version="3.17.1-nightly.0.2" />
+        <PackageReference Include="Material.Avalonia.DataGrid" Version="3.17.1-nightly.0.2" />
+        <PackageReference Include="Material.Avalonia.Dialogs" Version="3.17.1-nightly.0.2" />
+        <PackageReference Include="SqlSugarCore" Version="5.1.4.215-preview13" />
+        <PackageReference Include="Tomlyn" Version="2.4.0" />
+        <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+        <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.26.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\shmtu-dotnet-lib\ocr\shmtu-ocr-onnx-lib\shmtu-ocr-onnx-lib.csproj" />
-        <ProjectReference Include="..\shmtu-dotnet-lib\Core\shmtu-dotnet-lib\shmtu-dotnet-lib.csproj"/>
+        <Reference Include="shmtu-ocr-onnx-lib">
+            <HintPath>../shmtu-dotnet-lib/ocr/shmtu-ocr-onnx-lib/bin/$(Configuration)/net8.0/shmtu-ocr-onnx-lib.dll</HintPath>
+            <Private>true</Private>
+        </Reference>
+        <Reference Include="shmtu-dotnet-lib">
+            <HintPath>../shmtu-dotnet-lib/Core/shmtu-dotnet-lib/bin/$(Configuration)/net8.0/shmtu-dotnet-lib.dll</HintPath>
+            <Private>true</Private>
+        </Reference>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Database\Data\Bill\" />
-      <Folder Include="Database\Data\User\" />
-      <Folder Include="Database\Manage\Bill\" />
-    </ItemGroup>
+    <Target Name="BuildLocalDependencies"
+            BeforeTargets="ResolveReferences">
+        <MSBuild Projects="../shmtu-dotnet-lib/ocr/shmtu-ocr-onnx-lib/shmtu-ocr-onnx-lib.csproj"
+                 Targets="Build"
+                 Properties="Configuration=$(Configuration)"
+                 RemoveProperties="BuildingSolutionFile;CurrentSolutionConfigurationContents;SolutionDir;SolutionExt;SolutionFileName;SolutionName;SolutionPath;ExcludeRestorePackageImports;_RestoreSolutionFileUsed" />
+        <MSBuild Projects="../shmtu-dotnet-lib/Core/shmtu-dotnet-lib/shmtu-dotnet-lib.csproj"
+                 Targets="Build"
+                 Properties="Configuration=$(Configuration)"
+                 RemoveProperties="BuildingSolutionFile;CurrentSolutionConfigurationContents;SolutionDir;SolutionExt;SolutionFileName;SolutionName;SolutionPath;ExcludeRestorePackageImports;_RestoreSolutionFileUsed" />
+    </Target>
 </Project>

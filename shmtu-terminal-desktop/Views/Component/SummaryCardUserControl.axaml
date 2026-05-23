@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="using:Material.Styles"
+             xmlns:materialControls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+             mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="120"
+             x:Class="shmtu.terminal.desktop.Views.Component.SummaryCardUserControl">
+
+    <materialControls:Card Padding="16">
+        <StackPanel Spacing="4">
+            <TextBlock Text="{Binding Title}"
+                       FontSize="12"
+                       Foreground="{DynamicResource MaterialDesignBodyLight}" />
+            <TextBlock Text="{Binding Value}"
+                       FontSize="24" FontWeight="Bold"
+                       Foreground="{Binding ValueColor}" />
+            <TextBlock Text="{Binding Subtitle}"
+                       FontSize="11"
+                       Foreground="{DynamicResource MaterialDesignBodyLight}" />
+        </StackPanel>
+    </materialControls:Card>
+
+</UserControl>

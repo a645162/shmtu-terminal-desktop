@@ -2,8 +2,338 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:material="using:Material.Styles"
+        xmlns:materialControls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+        xmlns:vm="using:shmtu.terminal.desktop.ViewModels.Program"
+        mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="500"
         x:Class="shmtu.terminal.desktop.Views.Program.SettingsWindow"
-        Title="SettingsWindow">
-    Welcome to Avalonia!
+        x:DataType="vm:SettingsViewModel"
+        Title="设置"
+        Width="700" Height="500"
+        WindowStartupLocation="CenterOwner"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="{DynamicResource MaterialDesignBackground}">
+
+    <DockPanel>
+
+        <!-- Bottom Action Bar -->
+        <Border DockPanel.Dock="Bottom"
+                Background="{DynamicResource MaterialDesignToolBarBackground}"
+                Padding="16,8">
+            <DockPanel>
+                <Button Content="恢复默认"
+                        Command="{Binding ResetDefaultsCommand}"
+                        Classes="Flat" />
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            Spacing="8">
+                    <Button Content="取消"
+                            Command="{Binding CancelCommand}"
+                            Classes="Flat" />
+                    <Button Content="保存"
+                            Command="{Binding SaveCommand}"
+                            Classes="Primary" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <Grid ColumnDefinitions="180,*">
+
+            <!-- Left Navigation -->
+            <Border Grid.Column="0"
+                    Background="{DynamicResource MaterialDesignToolBarBackground}"
+                    Padding="8,16">
+                <ListBox Name="SettingsNavList"
+                         SelectedIndex="{Binding SelectedSettingsIndex}"
+                         ItemsSource="{Binding SettingsCategories}">
+                    <ListBox.Styles>
+                        <Style Selector="ListBoxItem">
+                            <Setter Property="Padding" Value="16,10" />
+                            <Setter Property="FontSize" Value="14" />
+                        </Style>
+                    </ListBox.Styles>
+                </ListBox>
+            </Border>
+
+            <!-- Right Content Area -->
+            <ScrollViewer Grid.Column="1"
+                          VerticalScrollBarVisibility="Auto"
+                          Padding="24,16">
+                <StackPanel>
+
+                <!-- Security Settings -->
+                <Panel IsVisible="{Binding IsSecuritySelected}">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="安全设置" FontSize="18" FontWeight="Bold" />
+
+                        <materialControls:Card Padding="16">
+                            <StackPanel Spacing="12">
+                                <DockPanel>
+                                    <TextBlock Text="启动保护"
+                                               VerticalAlignment="Center"
+                                               DockPanel.Dock="Left" />
+                                    <ToggleSwitch IsChecked="{Binding EnableStartupProtection}"
+                                                  HorizontalAlignment="Right" />
+                                </DockPanel>
+                                <Panel IsVisible="{Binding EnableStartupProtection}">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="保护密码"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBox PasswordChar="*"
+                                                     Text="{Binding ProtectionPassword}"
+                                                     Width="200" />
+                                            <Button Content="设置密码"
+                                                    Command="{Binding SetPasswordCommand}"
+                                                    Classes="Flat" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Panel>
+                            </StackPanel>
+                        </materialControls:Card>
+                    </StackPanel>
+                </Panel>
+
+                <!-- Captcha Settings -->
+                <Panel IsVisible="{Binding IsCaptchaSelected}">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="验证码设置" FontSize="18" FontWeight="Bold" />
+
+                        <materialControls:Card Padding="16">
+                            <StackPanel Spacing="12">
+                                <DockPanel>
+                                    <TextBlock Text="识别模式"
+                                               VerticalAlignment="Center"
+                                               DockPanel.Dock="Left" />
+                                    <ComboBox ItemsSource="{Binding CaptchaModes}"
+                                              SelectedItem="{Binding SelectedCaptchaMode}"
+                                              HorizontalAlignment="Right"
+                                              MinWidth="150" />
+                                </DockPanel>
+
+                                <!-- Remote OCR Settings -->
+                                <Panel IsVisible="{Binding IsRemoteOcrSelected}">
+                                    <StackPanel Spacing="8" Margin="0,8,0,0">
+                                        <TextBlock Text="OCR 服务器配置"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBox Watermark="服务器地址"
+                                                     Text="{Binding OcrHost}"
+                                                     Width="180" />
+                                            <TextBox Watermark="端口"
+                                                     Text="{Binding OcrPort}"
+                                                     Width="80" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Panel>
+
+                                <!-- Local ONNX Settings -->
+                                <Panel IsVisible="{Binding IsLocalOnnxSelected}">
+                                    <StackPanel Spacing="8" Margin="0,8,0,0">
+                                        <TextBlock Text="ONNX 模型路径"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBox Text="{Binding OnnxModelPath}"
+                                                     Width="300" />
+                                            <Button Content="浏览"
+                                                    Command="{Binding BrowseOnnxPathCommand}"
+                                                    Classes="Flat" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Panel>
+
+                                <DockPanel>
+                                    <TextBlock Text="OCR 重试次数"
+                                               VerticalAlignment="Center"
+                                               DockPanel.Dock="Left" />
+                                    <NumericUpDown Value="{Binding OcrRetryCount}"
+                                                   Minimum="1" Maximum="10"
+                                                   HorizontalAlignment="Right"
+                                                   Width="100" />
+                                </DockPanel>
+                            </StackPanel>
+                        </materialControls:Card>
+                    </StackPanel>
+                </Panel>
+
+                <!-- Sync Settings -->
+                <Panel IsVisible="{Binding IsSyncSelected}">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="同步设置" FontSize="18" FontWeight="Bold" />
+
+                        <materialControls:Card Padding="16">
+                            <StackPanel Spacing="12">
+                                <DockPanel>
+                                    <TextBlock Text="默认同步页数上限"
+                                               VerticalAlignment="Center"
+                                               DockPanel.Dock="Left" />
+                                    <NumericUpDown Value="{Binding MaxSyncPages}"
+                                                   Minimum="1" Maximum="1000"
+                                                   HorizontalAlignment="Right"
+                                                   Width="120" />
+                                </DockPanel>
+                                <DockPanel>
+                                    <TextBlock Text="提前停止阈值"
+                                               VerticalAlignment="Center"
+                                               DockPanel.Dock="Left" />
+                                    <NumericUpDown Value="{Binding EarlyStopThreshold}"
+                                                   Minimum="1" Maximum="50"
+                                                   HorizontalAlignment="Right"
+                                                   Width="120" />
+                                </DockPanel>
+                                <DockPanel>
+                                    <TextBlock Text="同步后自动合并"
+                                               VerticalAlignment="Center"
+                                               DockPanel.Dock="Left" />
+                                    <ToggleSwitch IsChecked="{Binding AutoMergeAfterSync}"
+                                                  HorizontalAlignment="Right" />
+                                </DockPanel>
+                            </StackPanel>
+                        </materialControls:Card>
+                    </StackPanel>
+                </Panel>
+
+                <!-- Data Settings -->
+                <Panel IsVisible="{Binding IsDataSelected}">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="数据设置" FontSize="18" FontWeight="Bold" />
+
+                        <materialControls:Card Padding="16">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="数据目录"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBox Text="{Binding DataDirectory}"
+                                             Width="350" />
+                                    <Button Content="浏览"
+                                            Command="{Binding BrowseDataDirectoryCommand}"
+                                            Classes="Flat" />
+                                </StackPanel>
+                                <DockPanel>
+                                    <TextBlock Text="快照自动保留数"
+                                               VerticalAlignment="Center"
+                                               DockPanel.Dock="Left" />
+                                    <NumericUpDown Value="{Binding SnapshotKeepCount}"
+                                                   Minimum="1" Maximum="100"
+                                                   HorizontalAlignment="Right"
+                                                   Width="120" />
+                                </DockPanel>
+                            </StackPanel>
+                        </materialControls:Card>
+                    </StackPanel>
+                </Panel>
+
+                <!-- UI Settings -->
+                <Panel IsVisible="{Binding IsUiSelected}">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="界面设置" FontSize="18" FontWeight="Bold" />
+
+                        <materialControls:Card Padding="16">
+                            <StackPanel Spacing="12">
+                                <DockPanel>
+                                    <TextBlock Text="主题"
+                                               VerticalAlignment="Center"
+                                               DockPanel.Dock="Left" />
+                                    <ComboBox ItemsSource="{Binding Themes}"
+                                              SelectedItem="{Binding SelectedTheme}"
+                                              HorizontalAlignment="Right"
+                                              MinWidth="120" />
+                                </DockPanel>
+                                <DockPanel>
+                                    <TextBlock Text="记住默认身份"
+                                               VerticalAlignment="Center"
+                                               DockPanel.Dock="Left" />
+                                    <ToggleSwitch IsChecked="{Binding RememberDefaultIdentity}"
+                                                  HorizontalAlignment="Right" />
+                                </DockPanel>
+                                <Panel IsVisible="{Binding RememberDefaultIdentity}">
+                                    <StackPanel Spacing="8" Margin="0,4,0,0">
+                                        <TextBlock Text="默认身份"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                                        <ComboBox ItemsSource="{Binding IdentityList}"
+                                                  SelectedItem="{Binding SelectedDefaultIdentity}"
+                                                  MinWidth="200"
+                                                  HorizontalAlignment="Left" />
+                                    </StackPanel>
+                                </Panel>
+                            </StackPanel>
+                        </materialControls:Card>
+                    </StackPanel>
+                </Panel>
+
+                <!-- Classification Rules Settings -->
+                <Panel IsVisible="{Binding IsClassificationSelected}">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="分类规则" FontSize="18" FontWeight="Bold" />
+
+                        <materialControls:Card Padding="16">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="规则文件路径"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBox Text="{Binding RulesPath}"
+                                             Width="300" />
+                                    <Button Content="浏览"
+                                            Command="{Binding BrowseRulesPathCommand}"
+                                            Classes="Flat" />
+                                </StackPanel>
+                                <TextBlock Text="规则更新源 (GitHub)"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                                <TextBox Text="{Binding RulesUpdateUrl}"
+                                         Width="400"
+                                         HorizontalAlignment="Left" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button Content="立即更新规则"
+                                            Command="{Binding UpdateRulesCommand}" />
+                                    <Button Content="恢复默认规则"
+                                            Command="{Binding ResetRulesCommand}"
+                                            Classes="Flat" />
+                                </StackPanel>
+                            </StackPanel>
+                        </materialControls:Card>
+                    </StackPanel>
+                </Panel>
+
+                <!-- Update Settings -->
+                <Panel IsVisible="{Binding IsUpdateSelected}">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="更新设置" FontSize="18" FontWeight="Bold" />
+
+                        <materialControls:Card Padding="16">
+                            <StackPanel Spacing="12">
+                                <DockPanel>
+                                    <TextBlock Text="自动检查更新"
+                                               VerticalAlignment="Center"
+                                               DockPanel.Dock="Left" />
+                                    <ToggleSwitch IsChecked="{Binding AutoCheckUpdate}"
+                                                  HorizontalAlignment="Right" />
+                                </DockPanel>
+                                <DockPanel>
+                                    <TextBlock Text="检查间隔（小时）"
+                                               VerticalAlignment="Center"
+                                               DockPanel.Dock="Left" />
+                                    <NumericUpDown Value="{Binding CheckIntervalHours}"
+                                                   Minimum="1" Maximum="168"
+                                                   HorizontalAlignment="Right"
+                                                   Width="120" />
+                                </DockPanel>
+                                <Button Content="立即检查更新"
+                                        Command="{Binding CheckUpdateNowCommand}" />
+                            </StackPanel>
+                        </materialControls:Card>
+                    </StackPanel>
+                </Panel>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </DockPanel>
+
 </Window>

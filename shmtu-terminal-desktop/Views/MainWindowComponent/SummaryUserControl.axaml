@@ -2,7 +2,30 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:component="using:shmtu.terminal.desktop.Views.Component"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="400"
              x:Class="shmtu.terminal.desktop.Views.MainWindowComponent.SummaryUserControl">
-    Welcome to Avalonia!
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="24,16" Spacing="16">
+
+            <!-- Summary Cards -->
+            <UniformGrid Rows="1" Columns="4">
+                <component:SummaryCardUserControl Margin="0,0,8,0"
+                                                  DataContext="{Binding TodayCard}" />
+                <component:SummaryCardUserControl Margin="8,0,8,0"
+                                                  DataContext="{Binding MonthCard}" />
+                <component:SummaryCardUserControl Margin="8,0,8,0"
+                                                  DataContext="{Binding DepositCard}" />
+                <component:SummaryCardUserControl Margin="8,0,0,0"
+                                                  DataContext="{Binding BalanceCard}" />
+            </UniformGrid>
+
+            <!-- Recent Transactions -->
+            <component:ChartUserControl DataContext="{Binding RecentChart}" />
+
+        </StackPanel>
+    </ScrollViewer>
+
 </UserControl>

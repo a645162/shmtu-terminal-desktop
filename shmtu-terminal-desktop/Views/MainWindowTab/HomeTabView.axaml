@@ -1,0 +1,98 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:material="using:Material.Styles"
+             xmlns:materialControls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+             xmlns:component="using:shmtu.terminal.desktop.Views.Component"
+             xmlns:countdown="using:shmtu.terminal.desktop.Views.Component.CountDown"
+             mc:Ignorable="d" d:DesignWidth="960" d:DesignHeight="560"
+             x:Class="shmtu.terminal.desktop.Views.MainWindowTab.HomeTabView">
+
+    <StackPanel Margin="24,16" Spacing="16">
+
+        <!-- Summary Cards Row 1 -->
+        <UniformGrid Rows="1" Columns="4">
+            <!-- Today's Spending -->
+            <materialControls:Card Margin="0,0,8,0" Padding="16">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="今日消费"
+                               FontSize="12"
+                               Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                    <TextBlock Text="{Binding TodaySpending}"
+                               FontSize="24" FontWeight="Bold"
+                               Foreground="#F44336" />
+                    <TextBlock Text="{Binding TodayComparison}"
+                               FontSize="11"
+                               Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                </StackPanel>
+            </materialControls:Card>
+
+            <!-- This Month's Spending -->
+            <materialControls:Card Margin="8,0,8,0" Padding="16">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="本月消费"
+                               FontSize="12"
+                               Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                    <TextBlock Text="{Binding MonthSpending}"
+                               FontSize="24" FontWeight="Bold"
+                               Foreground="#F44336" />
+                    <TextBlock Text="{Binding MonthComparison}"
+                               FontSize="11"
+                               Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                </StackPanel>
+            </materialControls:Card>
+
+            <!-- This Month's Deposit -->
+            <materialControls:Card Margin="8,0,8,0" Padding="16">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="本月充值"
+                               FontSize="12"
+                               Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                    <TextBlock Text="{Binding MonthDeposit}"
+                               FontSize="24" FontWeight="Bold"
+                               Foreground="#4CAF50" />
+                </StackPanel>
+            </materialControls:Card>
+
+            <!-- Card Balance -->
+            <materialControls:Card Margin="8,0,0,0" Padding="16">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="卡片余额"
+                               FontSize="12"
+                               Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                    <TextBlock Text="{Binding CardBalance}"
+                               FontSize="24" FontWeight="Bold"
+                               Foreground="#1976D2" />
+                </StackPanel>
+            </materialControls:Card>
+        </UniformGrid>
+
+        <!-- 7-Day Trend Chart -->
+        <materialControls:Card Padding="16">
+            <StackPanel Spacing="8">
+                <DockPanel>
+                    <TextBlock Text="近7日消费趋势"
+                               FontSize="14" FontWeight="SemiBold"
+                               DockPanel.Dock="Left"
+                               VerticalAlignment="Center" />
+                    <Button Content="查看更多"
+                            DockPanel.Dock="Right"
+                            HorizontalAlignment="Right"
+                            Classes="Flat"
+                            FontSize="12"
+                            Command="{Binding ShowTrendDetailCommand}" />
+                </DockPanel>
+                <component:ChartUserControl Height="180"
+                                            DataContext="{Binding WeeklyTrendChart}" />
+            </StackPanel>
+        </materialControls:Card>
+
+        <!-- Semester Countdown -->
+        <materialControls:Card Padding="16">
+            <countdown:CountDownWeekUserControl DataContext="{Binding CountdownViewModel}" />
+        </materialControls:Card>
+
+    </StackPanel>
+
+</UserControl>
