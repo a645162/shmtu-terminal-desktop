@@ -1,4 +1,5 @@
 using System.Net;
+using shmtu.terminal.desktop.Services.Security;
 using shmtu.cas.auth;
 using shmtu.cas.auth.common;
 using shmtu.cas.captcha;
@@ -13,7 +14,6 @@ using shmtu.terminal.desktop.Models.Identity;
 using shmtu.terminal.desktop.Services.Config;
 using shmtu.parser.bill;
 using shmtu.sync;
-using System.Text.Json;
 
 namespace shmtu.terminal.desktop.Services.Sync;
 
@@ -114,8 +114,13 @@ public class BillSyncService
         }
         catch (Exception ex)
         {
-            LoggingService.Error(ex, "[BillSync] 账号同步失败 | AccountId={AccountId} | Error={Error}",
+            LoggingService.Fatal(ex, "[BillSync] 致命错误：账号同步失败 | AccountId={AccountId}",
                 account.AccountId, ex.Message);
+            if (ex.InnerException is System.Security.Cryptography.CryptographicException || ex is Services.Security.DecryptionFailedException)
+            {
+                LoggingService.Fatal("[BillSync] 检测到解密失败，正在清除所有加密数据...");
+                Services.Security.EncryptionService.ClearAllData();
+            }
             return new AccountSyncResult { AccountId = account.AccountId, Success = false, ErrorMessage = ex.Message };
         }
     }
@@ -185,6 +190,11 @@ public class BillSyncService
         catch (Exception ex)
         {
             LoggingService.Error(ex, "[BillSync] 完整更新失败 | AccountId={AccountId}", account.AccountId);
+            if (ex.InnerException is System.Security.Cryptography.CryptographicException || ex is Services.Security.DecryptionFailedException)
+            {
+                LoggingService.Fatal("[BillSync] 检测到解密失败，正在清除所有加密数据...");
+                Services.Security.EncryptionService.ClearAllData();
+            }
             return new AccountSyncResult { AccountId = account.AccountId, Success = false, ErrorMessage = ex.Message };
         }
     }
@@ -253,9 +263,6 @@ public class BillSyncService
         return summary;
     }
 
-    /// <summary>
-    /// 创建 EpayAuth 并尝试复用已有会话
-    /// </summary>
     private async Task<EpayAuth> CreateEpayAuthAsync(
         string accountId,
         string password,
@@ -265,12 +272,11 @@ public class BillSyncService
         LoggingService.Debug("[BillSync] 创建 CAS 客户端 | AccountId={AccountId}", accountId);
         var casClient = new CasHttpClient();
 
-        // 尝试从数据库恢复会话
         var savedCookiesStr = SessionInfoDb.GetDecryptedCookies(accountId);
         if (!string.IsNullOrEmpty(savedCookiesStr))
         {
             LoggingService.Debug("[BillSync] 发现保存的会话，尝试恢复 | AccountId={AccountId}", accountId);
-            RestoreCookiesToContainer(casClient.CookieContainer, savedCookiesStr, "ecard.shmtu.edu.cn");
+            RestoreCookiesToContainer(casClient.CookieContainer, savedCookiesStr);
         }
         else
         {
@@ -279,7 +285,6 @@ public class BillSyncService
 
         var epayAuth = new EpayAuth(captchaResolver, casClient);
 
-        // 尝试使用已有会话
         try
         {
             LoggingService.Debug("[BillSync] 探测登录状态 | AccountId={AccountId}", accountId);
@@ -296,7 +301,6 @@ public class BillSyncService
             LoggingService.Debug("[BillSync] 探测登录状态失败，将执行新登录 | Error={Error}", ex.Message);
         }
 
-        // 需要登录
         LoggingService.Information("[BillSync] 执行新登录 | AccountId={AccountId}", accountId);
         var result = await epayAuth.SubmitLoginAsync(accountId, password, cancellationToken);
         if (result is not LoginSubmitResult.Success)
@@ -317,43 +321,48 @@ public class BillSyncService
         return epayAuth;
     }
 
-    /// <summary>
-    /// 将 cookies 字符串解析并注入到 CookieContainer
-    /// 格式: name=value;name=value;...
-    /// </summary>
-    private static void RestoreCookiesToContainer(CookieContainer container, string cookiesStr, string domain)
+    private static void RestoreCookiesToContainer(CookieContainer container, string cookiesStr)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(cookiesStr))
-            {
-                LoggingService.Verbose("[BillSync] Cookies 字符串为空");
-                return;
-            }
+            if (string.IsNullOrWhiteSpace(cookiesStr)) return;
 
-            var cookies = cookiesStr.Split(';', StringSplitOptions.RemoveEmptyEntries);
+            var cookieParts = cookiesStr.Split(new[] { ';', ';' }, StringSplitOptions.RemoveEmptyEntries);
             var count = 0;
-            foreach (var cookiePair in cookies)
+            var domain = ".shmtu.edu.cn";
+
+            foreach (var cookiePair in cookieParts)
             {
-                var parts = cookiePair.Split('=', 2);
-                if (parts.Length < 2) continue;
-                var name = parts[0].Trim();
-                var value = parts[1].Trim();
+                var trimmed = cookiePair.Trim();
+                if (string.IsNullOrEmpty(trimmed)) continue;
+
+                var separatorIndex = trimmed.IndexOf('=');
+                if (separatorIndex <= 0) continue;
+
+                var name = trimmed[..separatorIndex].Trim();
+                var value = trimmed[(separatorIndex + 1)..].Trim();
                 if (string.IsNullOrEmpty(name)) continue;
-                container.Add(new Cookie(name, value) { Domain = domain });
-                count++;
+
+                try
+                {
+                    container.Add(new Cookie(name, value) { Domain = domain });
+                    count++;
+                    LoggingService.Verbose("[BillSync] 添加 Cookie | Name={Name}", name);
+                }
+                catch
+                {
+                    try { container.Add(new Cookie(name, value)); count++; }
+                    catch { }
+                }
             }
             LoggingService.Debug("[BillSync] 已恢复 {Count} 个 Cookie | Domain={Domain}", count, domain);
         }
         catch (Exception ex)
         {
-            LoggingService.Warning("[BillSync] 恢复 Cookie 失败 | Error={Error}", ex.Message);
+            LoggingService.Warning("[BillSync] 恢复 Cookie 失败，继续使用新登录 | Error={Error}", ex.Message);
         }
     }
 
-    /// <summary>
-    /// 保存会话 Cookie
-    /// </summary>
     private static async Task SaveSessionAsync(EpayAuth epayAuth, string accountId)
     {
         try
@@ -361,12 +370,12 @@ public class BillSyncService
             LoggingService.Debug("[BillSync] 测试登录状态并保存会话 | AccountId={AccountId}", accountId);
             if (await epayAuth.TestLoginStatusAsync())
             {
-                var cookies = DumpCookiesFromContainer(epayAuth.HttpClient.CookieContainer, "ecard.shmtu.edu.cn");
+                var cookies = DumpAllDomainCookies(epayAuth.HttpClient.CookieContainer);
                 if (!string.IsNullOrEmpty(cookies))
                 {
                     SessionInfoDb.Save(accountId, cookies);
-                    LoggingService.Debug("[BillSync] 会话已保存 | AccountId={AccountId} | CookieCount={Count}",
-                        accountId, cookies.Split(';').Length);
+                    LoggingService.Debug("[BillSync] 会话已保存 | AccountId={AccountId} | Count={Count}",
+                        accountId, cookies.Split(';', StringSplitOptions.RemoveEmptyEntries).Length);
                 }
             }
         }
@@ -376,23 +385,25 @@ public class BillSyncService
         }
     }
 
-    private static string DumpCookiesFromContainer(CookieContainer container, string domain)
+    private static string DumpAllDomainCookies(CookieContainer container)
     {
-        try
+        var parts = new List<string>();
+        var domains = new[] { ".shmtu.edu.cn", "shmtu.edu.cn", "cas.shmtu.edu.cn", "ecard.shmtu.edu.cn" };
+
+        foreach (var domain in domains)
         {
-            var cookies = container.GetCookies(new Uri($"https://{domain}"));
-            var parts = new List<string>();
-            foreach (Cookie c in cookies)
-                parts.Add($"{c.Name}={c.Value}");
-            var result = string.Join("; ", parts);
-            LoggingService.Verbose("[BillSync] 提取 Cookie | Domain={Domain} | Count={Count}", domain, parts.Count);
-            return result;
+            try
+            {
+                var cookies = container.GetCookies(new Uri($"https://{domain}"));
+                foreach (Cookie c in cookies)
+                    parts.Add($"{c.Name}={c.Value}");
+            }
+            catch { }
         }
-        catch (Exception ex)
-        {
-            LoggingService.Warning("[BillSync] 提取 Cookie 失败 | Error={Error}", ex.Message);
-            return "";
-        }
+
+        var result = string.Join("; ", parts.Distinct());
+        LoggingService.Verbose("[BillSync] 提取所有 Cookie | Count={Count}", parts.Count);
+        return result;
     }
 
     private void OnProgressChanged(SyncProgress progress)
