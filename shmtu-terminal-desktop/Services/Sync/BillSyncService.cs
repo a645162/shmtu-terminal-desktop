@@ -3,6 +3,7 @@ using shmtu.terminal.desktop.Services.Security;
 using shmtu.cas.auth;
 using shmtu.cas.auth.common;
 using shmtu.cas.captcha;
+using shmtu.classifier;
 using shmtu.datatype.bill;
 using shmtu.terminal.desktop.Database;
 using shmtu.terminal.desktop.Database.Manage.Bill;
@@ -48,6 +49,7 @@ public class AccountSyncResult
 public class BillSyncService
 {
     private readonly AppConfig _appConfig;
+    private PositionTranslator? _positionTranslator;
 
     public BillSyncService()
     {
@@ -58,6 +60,62 @@ public class BillSyncService
     }
 
     public event Action<SyncProgress>? ProgressChanged;
+
+    /// <summary>
+    /// 获取或创建位置翻译器，从 database/bill/position.json 加载规则
+    /// </summary>
+    private PositionTranslator? GetOrCreatePositionTranslator()
+    {
+        if (_positionTranslator != null)
+            return _positionTranslator;
+
+        try
+        {
+            // 尝试多个可能的路径
+            var possiblePaths = new[]
+            {
+                // 相对于输出目录 (bin/Debug/net8.0/ → 项目根 → 解决方案根 → database/bill/)
+                Path.GetFullPath(Path.Combine(
+                    AppDomain.CurrentDomain.BaseDirectory,
+                    "../../../../database/bill/position.json")),
+                // 相对于当前工作目录
+                Path.GetFullPath("database/bill/position.json"),
+                // 相对于 Data 目录
+                Path.GetFullPath(Path.Combine(
+                    Database.Common.BaseDbSource.DataDirectoryPath,
+                    "../../database/bill/position.json")),
+            };
+
+            string? foundPath = null;
+            foreach (var path in possiblePaths)
+            {
+                LoggingService.Verbose("[BillSync] 尝试加载 position.json | Path={Path}", path);
+                if (File.Exists(path))
+                {
+                    foundPath = path;
+                    break;
+                }
+            }
+
+            if (foundPath == null)
+            {
+                LoggingService.Warning("[BillSync] 未找到 position.json 文件，跳过位置翻译 | Searched={Paths}",
+                    string.Join(", ", possiblePaths));
+                return null;
+            }
+
+            var json = File.ReadAllText(foundPath);
+            _positionTranslator = PositionTranslator.FromJson(json);
+            LoggingService.Information("[BillSync] 位置翻译器加载成功 | Path={Path} | Keywords={Count}",
+                foundPath, _positionTranslator.Keywords.Count);
+            return _positionTranslator;
+        }
+        catch (Exception ex)
+        {
+            LoggingService.Error(ex, "[BillSync] 加载 position.json 失败，跳过位置翻译");
+            return null;
+        }
+    }
 
     public async Task<AccountSyncResult> SyncAccountAsync(
         AccountInfo account,
@@ -83,7 +141,8 @@ public class BillSyncService
             InitDb.InitAccountDb(account.AccountId);
             InitDb.InitIdentityDb(account.IdentityId);
 
-            var store = new DatabaseBillStore(account.AccountId, account.IdentityId);
+            var translator = GetOrCreatePositionTranslator();
+            var store = new DatabaseBillStore(account.AccountId, account.IdentityId, translator);
             LoggingService.Debug("[BillSync] 创建 DatabaseBillStore | ExistingCount={Count}", store.GetExistingCount());
 
             LoggingService.Information("[BillSync] 创建 EpayAuth 会话 | AccountId={AccountId}", account.AccountId);
@@ -162,7 +221,12 @@ public class BillSyncService
             InitDb.InitAccountDb(account.AccountId);
             InitDb.InitIdentityDb(account.IdentityId);
 
-            var store = new DatabaseBillStore(account.AccountId, account.IdentityId);
+            // 全量更新：清除旧 session，强制重新登录
+            LoggingService.Information("[BillSync] 全量更新：清除旧 session | AccountId={AccountId}", account.AccountId);
+            SessionInfoDb.Invalidate(account.AccountId);
+
+            var translator = GetOrCreatePositionTranslator();
+            var store = new DatabaseBillStore(account.AccountId, account.IdentityId, translator);
             LoggingService.Debug("[BillSync] 创建 DatabaseBillStore | ExistingCount={Count}", store.GetExistingCount());
 
             LoggingService.Information("[BillSync] 创建 EpayAuth 会话（完整更新模式）");
@@ -418,11 +482,13 @@ public class BillSyncService
         private readonly string _accountId;
         private readonly int _identityId;
         private readonly HashSet<string> _existingNumbers;
+        private readonly PositionTranslator? _translator;
 
-        public DatabaseBillStore(string accountId, int identityId)
+        public DatabaseBillStore(string accountId, int identityId, PositionTranslator? translator = null)
         {
             _accountId = accountId;
             _identityId = identityId;
+            _translator = translator;
             _existingNumbers = new HashSet<string>(
                 BillOriginalDb.GetAll(accountId)
                     .Where(b => !string.IsNullOrEmpty(b.Number))
@@ -450,14 +516,35 @@ public class BillSyncService
 
             LoggingService.Debug("[DatabaseBillStore] 开始合并 {Count} 条新账单", newBills.Count);
 
-            var originalRecords = newBills.Select(b => BillOriginalDb.FromBillItemInfo(b, _accountId)).ToList();
+            // 翻译每条账单的 target_user 为楼栋和房间
+            var translatedBills = newBills.Select(b =>
+            {
+                string? building = null;
+                string? room = null;
+                if (_translator != null && !string.IsNullOrEmpty(b.TargetUser))
+                {
+                    var translation = _translator.Translate(b.TargetUser);
+                    if (translation.HasValue)
+                    {
+                        building = translation.Value.position;
+                        room = translation.Value.room;
+                    }
+                }
+                return (Bill: b, Building: building, Room: room);
+            }).ToList();
+
+            var originalRecords = translatedBills
+                .Select(t => BillOriginalDb.FromBillItemInfo(t.Bill, _accountId, t.Building, t.Room))
+                .ToList();
             BillOriginalDb.InsertRange(_accountId, originalRecords);
             LoggingService.Debug("[DatabaseBillStore] 原始账单已写入 | Count={Count}", originalRecords.Count);
 
             foreach (var bill in newBills)
                 if (!string.IsNullOrEmpty(bill.Number)) _existingNumbers.Add(bill.Number);
 
-            var mergedRecords = newBills.Select(b => BillMergedDb.FromBillItemInfo(b, _accountId)).ToList();
+            var mergedRecords = translatedBills
+                .Select(t => BillMergedDb.FromBillItemInfo(t.Bill, _accountId, t.Building, t.Room))
+                .ToList();
             BillMergedDb.AppendRange(_identityId, mergedRecords);
             LoggingService.Debug("[DatabaseBillStore] 合并账单已写入 | Count={Count}", mergedRecords.Count);
         }

@@ -67,6 +67,18 @@ public class BillOriginal
     [SugarColumn(IsNullable = false, Length = 12)]
     public string AccountId { get; set; } = "";
 
+    /// <summary>
+    /// 翻译后的楼栋名称（如"海馨楼"、"海琴楼"）
+    /// </summary>
+    [SugarColumn(IsNullable = true, Length = 100)]
+    public string? Building { get; set; }
+
+    /// <summary>
+    /// 翻译后的具体房间/窗口
+    /// </summary>
+    [SugarColumn(IsNullable = true, Length = 100)]
+    public string? Room { get; set; }
+
     [SugarColumn(IsNullable = true, Length = 30)]
     public string? SyncedAt { get; set; }
 }

@@ -3,6 +3,7 @@ using System.Text.Json;
 using shmtu.terminal.desktop.Database.Common;
 using shmtu.terminal.desktop.Database.Source.Identity;
 using shmtu.terminal.desktop.Models.Bill;
+using shmtu.classifier;
 using SqlSugar;
 
 namespace shmtu.terminal.desktop.Database.Manage.Bill;
@@ -312,7 +313,11 @@ public static class BillMergedDb
         return (totalExpense, totalIncome, bills.Count);
     }
 
-    public static BillMerged FromBillItemInfo(shmtu.datatype.bill.BillItemInfo item, string sourceAccountId)
+    public static BillMerged FromBillItemInfo(
+        shmtu.datatype.bill.BillItemInfo item,
+        string sourceAccountId,
+        string? building = null,
+        string? room = null)
     {
         LoggingService.Verbose("[BillMergedDb] 转换 BillItemInfo 到 BillMerged | AccountId={AccountId} | Number={Number}",
             sourceAccountId, item.Number);
@@ -332,6 +337,8 @@ public static class BillMergedDb
             Number = item.Number,
             NumberList = JsonSerializer.Serialize(item.NumberList),
             TargetUser = item.TargetUser,
+            Building = building,
+            Room = room,
             MoneyStr = item.MoneyString,
             Money = item.Money,
             Method = item.Method,
@@ -359,6 +366,8 @@ public static class BillMergedDb
             Number = original.Number,
             NumberList = original.NumberList,
             TargetUser = original.TargetUser,
+            Building = original.Building,
+            Room = original.Room,
             MoneyStr = original.MoneyStr,
             Money = original.Money,
             Method = original.Method,
@@ -368,4 +377,79 @@ public static class BillMergedDb
             IsManual = false,
         };
     }
+
+    #region 分类统计方法
+
+    /// <summary>
+    /// 按消费类型统计金额 — 使用 BillClassifier 进行分类后聚合
+    /// 注意：结果在内存中计算，适用于中等数据量
+    /// </summary>
+    public static Dictionary<string, double> GetSummaryByType(
+        int identityId,
+        shmtu.classifier.BillClassifier classifier,
+        long? startTime = null,
+        long? endTime = null)
+    {
+        LoggingService.Debug("[BillMergedDb] 按类型统计金额 | IdentityId={IdentityId} | Start={Start} | End={End}",
+            identityId, startTime, endTime);
+
+        var db = GetDb(identityId);
+        var query = db.Queryable<BillMerged>();
+
+        if (startTime.HasValue)
+            query = query.Where(b => b.Timestamp >= startTime.Value);
+        if (endTime.HasValue)
+            query = query.Where(b => b.Timestamp <= endTime.Value);
+
+        var bills = query.ToList();
+        var result = new Dictionary<string, double>();
+
+        foreach (var bill in bills)
+        {
+            var category = classifier.Classify(bill.ItemType ?? "", bill.TargetUser ?? "");
+            var typeName = category.DisplayName();
+            var money = bill.Money ?? 0;
+            result.TryGetValue(typeName, out var current);
+            result[typeName] = current + money;
+        }
+
+        LoggingService.Information("[BillMergedDb] 按类型统计完成 | Count={Count}", result.Count);
+        return result;
+    }
+
+    /// <summary>
+    /// 按楼栋统计金额 — 使用数据库中存储的 Building 字段聚合
+    /// </summary>
+    public static Dictionary<string, double> GetSummaryByBuilding(
+        int identityId,
+        long? startTime = null,
+        long? endTime = null)
+    {
+        LoggingService.Debug("[BillMergedDb] 按楼栋统计金额 | IdentityId={IdentityId} | Start={Start} | End={End}",
+            identityId, startTime, endTime);
+
+        var db = GetDb(identityId);
+        var query = db.Queryable<BillMerged>();
+
+        if (startTime.HasValue)
+            query = query.Where(b => b.Timestamp >= startTime.Value);
+        if (endTime.HasValue)
+            query = query.Where(b => b.Timestamp <= endTime.Value);
+
+        var bills = query.ToList();
+        var result = new Dictionary<string, double>();
+
+        foreach (var bill in bills)
+        {
+            var building = bill.Building ?? "未知";
+            var money = bill.Money ?? 0;
+            result.TryGetValue(building, out var current);
+            result[building] = current + money;
+        }
+
+        LoggingService.Information("[BillMergedDb] 按楼栋统计完成 | Count={Count}", result.Count);
+        return result;
+    }
+
+    #endregion
 }

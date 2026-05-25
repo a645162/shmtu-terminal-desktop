@@ -142,4 +142,9 @@ public class ClassificationResult
     /// 原始对方账户/位置
     /// </summary>
     public string? OriginalTargetUser { get; set; }
+
+    /// <summary>
+    /// 获取显示名称（用于统计显示）
+    /// </summary>
+    public string DisplayName() => Type;
 }

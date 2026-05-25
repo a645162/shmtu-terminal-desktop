@@ -77,6 +77,24 @@ public class BillMerged
     [SugarColumn(IsNullable = false)]
     public bool IsManual { get; set; } = false;
 
+    /// <summary>
+    /// 翻译后的楼栋名称（如"海馨楼"、"海琴楼"）
+    /// </summary>
+    [SugarColumn(IsNullable = true, Length = 100)]
+    public string? Building { get; set; }
+
+    /// <summary>
+    /// 翻译后的具体房间/窗口
+    /// </summary>
+    [SugarColumn(IsNullable = true, Length = 100)]
+    public string? Room { get; set; }
+
+    /// <summary>
+    /// 用户备注
+    /// </summary>
+    [SugarColumn(IsNullable = true, Length = 500)]
+    public string? Notes { get; set; }
+
     [SugarColumn(IsNullable = true, Length = 30)]
     public string? SyncedAt { get; set; }
 }

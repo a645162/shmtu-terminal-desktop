@@ -5,6 +5,7 @@ using shmtu.terminal.desktop.Database;
 using shmtu.terminal.desktop.Services;
 using shmtu.terminal.desktop.Services.Config;
 using shmtu.terminal.desktop.Services.Navigation;
+using shmtu.terminal.desktop.Services.Session;
 using shmtu.terminal.desktop.ViewModels;
 using shmtu.terminal.desktop.ViewModels.Startup;
 using shmtu.terminal.desktop.Views;
@@ -144,5 +145,9 @@ public partial class App : Application
         desktop.MainWindow = mainWindow;
 
         LoggingService.Information("主窗口创建完成并显示");
+
+        // 启动 Session 过期检查服务
+        LoggingService.Information("启动 Session 过期检查服务...");
+        SessionExpirationService.Start();
     }
 }

@@ -216,7 +216,11 @@ public static class BillOriginalDb
     /// <summary>
     /// 将 BillItemInfo（shmtu-dotnet-lib）转换为 BillOriginal（数据库模型）
     /// </summary>
-    public static BillOriginal FromBillItemInfo(shmtu.datatype.bill.BillItemInfo item, string accountId)
+    public static BillOriginal FromBillItemInfo(
+        shmtu.datatype.bill.BillItemInfo item,
+        string accountId,
+        string? building = null,
+        string? room = null)
     {
         LoggingService.Verbose("[BillOriginalDb] 转换 BillItemInfo 到 BillOriginal | AccountId={AccountId} | Number={Number}",
             accountId, item.Number);
@@ -235,6 +239,8 @@ public static class BillOriginalDb
             Number = item.Number,
             NumberList = JsonSerializer.Serialize(item.NumberList),
             TargetUser = item.TargetUser,
+            Building = building,
+            Room = room,
             MoneyStr = item.MoneyString,
             Money = item.Money,
             Method = item.Method,

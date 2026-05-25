@@ -11,6 +11,7 @@ public class AppConfig
     public UpdateConfig Update { get; set; } = new();
     public UiConfig Ui { get; set; } = new();
     public SemesterConfig Semester { get; set; } = new();
+    public SessionConfig Session { get; set; } = new();
 }
 
 public class SecurityConfig
@@ -76,4 +77,21 @@ public class SemesterConfig
     public string SemesterName { get; set; } = "2024-2025学年第二学期";
     public DateTime StartDate { get; set; } = new(2025, 2, 17);
     public DateTime EndDate { get; set; } = new(2025, 6, 27);
+}
+
+/// <summary>
+/// Session 会话配置 — 控制 session 续期和过期检查行为
+/// </summary>
+public class SessionConfig
+{
+    /// <summary>
+    /// Session 续期检查间隔（分钟），默认 10 分钟
+    /// 每次检查会上下浮动 1 分钟，避免同时检查
+    /// </summary>
+    public int RefreshIntervalMinutes { get; set; } = 10;
+
+    /// <summary>
+    /// 是否启用自动 session 续期
+    /// </summary>
+    public bool AutoRefresh { get; set; } = true;
 }
