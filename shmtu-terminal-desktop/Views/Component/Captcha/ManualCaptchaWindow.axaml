@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:materialControls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+        xmlns:appControls="using:shmtu.terminal.desktop.Controls"
         mc:Ignorable="d" d:DesignWidth="320" d:DesignHeight="280"
         x:Class="shmtu.terminal.desktop.Views.Component.Captcha.ManualCaptchaWindow"
         Title="请输入验证码"
@@ -10,8 +10,7 @@
         WindowStartupLocation="CenterScreen"
         CanResize="False"
         SizeToContent="Manual"
-        TransparencyLevelHint="AcrylicBlur"
-        Background="{DynamicResource MaterialDesignBackground}">
+        TransparencyLevelHint="AcrylicBlur">
 
   <StackPanel Margin="24,20" Spacing="12" HorizontalAlignment="Center">
 
@@ -20,11 +19,11 @@
                HorizontalAlignment="Center" />
 
     <!-- Captcha Image -->
-    <materialControls:Card Padding="4" HorizontalAlignment="Center">
+    <appControls:Card Padding="4" HorizontalAlignment="Center">
       <Image Source="{Binding CaptchaImage}"
              Width="240" Height="80"
              Stretch="Uniform" />
-    </materialControls:Card>
+    </appControls:Card>
 
     <!-- Expression hint -->
     <TextBlock Text="{Binding CaptchaExpression}"
@@ -35,7 +34,7 @@
 
     <!-- Answer Input -->
     <TextBox Text="{Binding CaptchaAnswer}"
-             Watermark="输入答案，按回车确认"
+             PlaceholderText="输入答案，按回车确认"
              Width="240"
              HorizontalAlignment="Center"
              x:Name="AnswerBox" />

@@ -1,19 +1,17 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:themes="clr-namespace:Material.Styles.Themes;assembly=Material.Styles"
              x:Class="shmtu.terminal.desktop.App"
              xmlns:local="using:shmtu.terminal.desktop"
              RequestedThemeVariant="Default">
-    <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
         <local:ViewLocator />
     </Application.DataTemplates>
 
     <Application.Styles>
-        <!-- <FluentTheme /> -->
-        <themes:MaterialTheme PrimaryColor="Blue" SecondaryColor="Lime" />
-        <StyleInclude Source="avares://Material.Avalonia.DataGrid/DataGrid.xaml" />
+        <FluentTheme />
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
+        <StyleInclude Source="/Styles/AppTheme.axaml" />
     </Application.Styles>
 
 </Application>

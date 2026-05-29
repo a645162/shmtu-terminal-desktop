@@ -66,7 +66,8 @@ public static class EncryptionService
             var dir = Path.GetDirectoryName(_deviceKeyFile);
             if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
             File.WriteAllText(_deviceKeyFile, newKey);
-            File.SetUnixFileMode(_deviceKeyFile, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+            if (!OperatingSystem.IsWindows())
+                File.SetUnixFileMode(_deviceKeyFile, UnixFileMode.UserRead | UnixFileMode.UserWrite);
         }
         catch { return newKey; }
         return newKey;

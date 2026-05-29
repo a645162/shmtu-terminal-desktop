@@ -2,16 +2,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:material="using:Material.Styles"
-        xmlns:materialControls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+                xmlns:appControls="using:shmtu.terminal.desktop.Controls"
         mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="550"
         x:Class="shmtu.terminal.desktop.Views.Program.DataTransferWindow"
         Title="数据管理"
         Width="600" Height="550"
         WindowStartupLocation="CenterOwner"
         MinWidth="500" MinHeight="450"
-        TransparencyLevelHint="AcrylicBlur"
-        Background="{DynamicResource MaterialDesignBackground}">
+        TransparencyLevelHint="AcrylicBlur">
 
     <DockPanel>
 
@@ -35,7 +33,7 @@
                 <StackPanel Spacing="16">
                     <TextBlock Text="数据导出" FontSize="18" FontWeight="Bold" />
 
-                    <materialControls:Card Padding="16">
+                    <appControls:Card Padding="16">
                         <StackPanel Spacing="12">
                             <DockPanel>
                                 <TextBlock Text="数据范围"
@@ -98,7 +96,7 @@
                                        Foreground="{DynamicResource MaterialDesignBodyLight}"
                                        IsVisible="{Binding IsExporting}" />
                         </StackPanel>
-                    </materialControls:Card>
+                    </appControls:Card>
                 </StackPanel>
             </Panel>
 
@@ -107,14 +105,14 @@
                 <StackPanel Spacing="16">
                     <TextBlock Text="数据导入" FontSize="18" FontWeight="Bold" />
 
-                    <materialControls:Card Padding="16">
+                    <appControls:Card Padding="16">
                         <StackPanel Spacing="12">
                             <TextBlock Text="导入文件"
                                        FontSize="12"
                                        Foreground="{DynamicResource MaterialDesignBodyLight}" />
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <TextBox Text="{Binding ImportFilePath}"
-                                         Watermark="选择JSON文件"
+                                         PlaceholderText="选择JSON文件"
                                          Width="350" />
                                 <Button Content="浏览"
                                         Command="{Binding BrowseImportFileCommand}"
@@ -133,7 +131,7 @@
 
                             <!-- Import Preview -->
                             <Panel IsVisible="{Binding HasImportPreview}">
-                                <materialControls:Card Padding="12" Margin="0,4,0,0">
+                                <appControls:Card Padding="12" Margin="0,4,0,0">
                                     <StackPanel Spacing="4">
                                         <TextBlock Text="导入预览"
                                                    FontSize="12" FontWeight="SemiBold" />
@@ -141,7 +139,7 @@
                                                    FontSize="12"
                                                    Foreground="{DynamicResource MaterialDesignBodyLight}" />
                                     </StackPanel>
-                                </materialControls:Card>
+                                </appControls:Card>
                             </Panel>
 
                             <StackPanel Orientation="Horizontal" Spacing="8">
@@ -152,7 +150,7 @@
                                         Classes="Primary" />
                             </StackPanel>
                         </StackPanel>
-                    </materialControls:Card>
+                    </appControls:Card>
                 </StackPanel>
             </Panel>
 
@@ -161,7 +159,7 @@
                 <StackPanel Spacing="16">
                     <TextBlock Text="快照管理" FontSize="18" FontWeight="Bold" />
 
-                    <materialControls:Card Padding="16">
+                    <appControls:Card Padding="16">
                         <StackPanel Spacing="12">
                             <DockPanel>
                                 <StackPanel Orientation="Horizontal"
@@ -216,7 +214,7 @@
                                 </DataGrid.Columns>
                             </DataGrid>
                         </StackPanel>
-                    </materialControls:Card>
+                    </appControls:Card>
                 </StackPanel>
             </Panel>
             </StackPanel>

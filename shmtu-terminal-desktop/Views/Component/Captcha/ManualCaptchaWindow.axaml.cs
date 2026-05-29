@@ -22,8 +22,8 @@ public partial class ManualCaptchaWindow : Window
     {
         if (e.Key == Key.Enter && DataContext is ViewModels.Component.Captcha.ManualCaptchaViewModel vm)
         {
-            if (!string.IsNullOrWhiteSpace(vm.CaptchaAnswer))
-                vm.ConfirmCommand.Execute().Subscribe();
+            vm.ConfirmCommand.Execute().Subscribe();
+            e.Handled = true;
         }
         base.OnKeyDown(e);
     }

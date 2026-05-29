@@ -172,20 +172,54 @@ public class MainWindowViewModel : ViewModelBase
     {
         var vm = new ManualCaptchaViewModel();
         vm.SetImageBytes(imageData);
-        vm.Tcs = new TaskCompletionSource<CaptchaResult>();
+        vm.Tcs = new TaskCompletionSource<CaptchaResult>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         var window = new ManualCaptchaWindow { DataContext = vm };
-
-        // Show dialog non-blockingly via dispatcher
-        var topLevel = GetTopLevel();
-        if (topLevel == null)
-            throw new InvalidOperationException("无法获取顶级窗口");
-
         var mainWin = GetMainWindow();
-            if (mainWin != null) await window.ShowDialog(mainWin);
+        if (mainWin == null)
+            throw new InvalidOperationException("无法获取主窗口");
 
-        var result = await vm.Tcs.Task.WaitAsync(cancellationToken);
-        return new CaptchaAnswer(result.Answer, CaptchaAnswerKind.Answer);
+        void OnCloseRequested()
+        {
+            if (window.IsVisible)
+                window.Close();
+        }
+
+        void OnClosed(object? sender, EventArgs args)
+        {
+            vm.Tcs?.TrySetResult(new CaptchaResult
+            {
+                Expression = vm.CaptchaExpression,
+                Answer = vm.CaptchaAnswer.Trim(),
+                Success = !string.IsNullOrWhiteSpace(vm.CaptchaAnswer),
+            });
+        }
+
+        vm.CloseRequested += OnCloseRequested;
+        window.Closed += OnClosed;
+
+        using var cancellationRegistration = cancellationToken.Register(() =>
+        {
+            vm.Tcs?.TrySetCanceled(cancellationToken);
+            if (window.IsVisible)
+                window.Close();
+        });
+
+        var dialogTask = window.ShowDialog(mainWin);
+        try
+        {
+            var result = await vm.Tcs!.Task.WaitAsync(cancellationToken);
+            if (window.IsVisible)
+                window.Close();
+
+            await dialogTask;
+            return new CaptchaAnswer(result.Answer, CaptchaAnswerKind.Answer);
+        }
+        finally
+        {
+            vm.CloseRequested -= OnCloseRequested;
+            window.Closed -= OnClosed;
+        }
     }
 
     private static Window? GetMainWindow()
@@ -272,7 +306,10 @@ public class MainWindowViewModel : ViewModelBase
         {
             SyncStatus = progress.Status switch
             {
-                "syncing" => $"正在同步: {progress.AccountName}...",
+                "syncing" when progress.TotalPages > 0 =>
+                    $"正在同步: {progress.AccountName} 第{progress.CurrentPage}/{progress.TotalPages}页 (+{progress.NewCount}条)",
+                "syncing" =>
+                    $"正在同步: {progress.AccountName}...",
                 "completed" => $"已完成: {progress.AccountName} (+{progress.NewCount}条)",
                 "failed" => $"失败: {progress.AccountName}",
                 _ => progress.Status,

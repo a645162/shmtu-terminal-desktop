@@ -197,7 +197,8 @@ public class SessionExpirationService : IDisposable
             RestoreCookiesToContainer(casClient.CookieContainer, cookies);
 
             using var epayAuth = new EpayAuth(
-                new ManualCaptchaResolver(async (imageData, ct) => throw new InvalidOperationException("不需要验证码")),
+                new ManualCaptchaResolver((imageData, ct) => Task.FromException<CaptchaAnswer>(
+                    new InvalidOperationException("不需要验证码"))),
                 casClient);
 
             // 4. 探测登录状态

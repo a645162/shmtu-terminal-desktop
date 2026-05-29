@@ -1,6 +1,5 @@
 using System.Reactive;
 using ReactiveUI;
-using System.Reactive;
 using shmtu.terminal.desktop.Services.Config;
 using shmtu.terminal.desktop.Services.Navigation;
 
@@ -81,12 +80,12 @@ public class CountDownWeekViewModel : ViewModelBase
 
         var config = TomlConfigService.LoadAppConfig();
         var sem = config.Semester;
-        if (sem?.StartDate != default)
+        if (sem is not null && sem.StartDate != default)
             SemesterStart = sem.StartDate;
         else
             SemesterStart = new DateTime(year, 2, 17);  // 春季学期开始
 
-        if (sem?.EndDate != default)
+        if (sem is not null && sem.EndDate != default)
             SemesterEnd = sem.EndDate;
         else
             SemesterEnd = new DateTime(year, 6, 27);   // 春季学期结束

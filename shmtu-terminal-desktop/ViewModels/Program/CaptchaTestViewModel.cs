@@ -93,7 +93,7 @@ public class CaptchaTestViewModel : ViewModelBase
 
     public CaptchaTestViewModel()
     {
-        RefreshCaptchaCommand = ReactiveCommand.CreateFromTask(RefreshCaptchaAsync);
+        RefreshCaptchaCommand = ReactiveCommand.Create(RefreshCaptcha);
         TestRecognizeCommand = ReactiveCommand.CreateFromTask(TestRecognizeAsync);
         BatchTestCommand = ReactiveCommand.CreateFromTask(BatchTestAsync);
         ClearHistoryCommand = ReactiveCommand.Create(() =>
@@ -103,7 +103,7 @@ public class CaptchaTestViewModel : ViewModelBase
         });
     }
 
-    private async Task RefreshCaptchaAsync()
+    private void RefreshCaptcha()
     {
         try
         {

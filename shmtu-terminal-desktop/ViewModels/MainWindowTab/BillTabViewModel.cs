@@ -1,9 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Reactive;
 using Avalonia;
-using Avalonia.Platform.Storage;
 using Avalonia.Controls;
-using Avalonia.Platform.Storage;
 using Avalonia.Controls.ApplicationLifetimes;
 using ReactiveUI;
 using shmtu.terminal.desktop.Database;
@@ -332,7 +330,10 @@ public class BillTabViewModel : ViewModelBase
 
         try
         {
-            BillMergedDb.DeleteManual(_identityId, SelectedBillItem.Id);
+            var selectedBill = SelectedBillItem;
+            if (selectedBill == null) return;
+
+            BillMergedDb.DeleteManual(_identityId, selectedBill.Id);
             RefreshData();
         }
         catch (Exception ex)

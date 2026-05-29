@@ -1,10 +1,9 @@
 using System.Reactive;
 using Avalonia;
-using Avalonia.Platform.Storage;
 using Avalonia.Controls;
-using Avalonia.Platform.Storage;
 using Avalonia.Media.Imaging;
 using ReactiveUI;
+using System.Reactive.Linq;
 
 namespace shmtu.terminal.desktop.ViewModels.Component.Captcha;
 
@@ -24,7 +23,12 @@ public class ManualCaptchaViewModel : ViewModelBase
     public string CaptchaAnswer
     {
         get => _captchaAnswer;
-        set => this.RaiseAndSetIfChanged(ref _captchaAnswer, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _captchaAnswer, value);
+            if (!string.IsNullOrWhiteSpace(value) && HasError)
+                ErrorMessage = "";
+        }
     }
 
     private string _captchaExpression = "";
@@ -59,9 +63,11 @@ public class ManualCaptchaViewModel : ViewModelBase
     }
 
     public bool HasImage => _captchaImage != null;
+    public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
 
     public ReactiveCommand<Unit, Unit> CopyImageCommand { get; }
     public ReactiveCommand<Unit, Unit> ConfirmCommand { get; }
+    public event Action? CloseRequested;
 
     /// <summary>
     /// Set when user confirms — caller awaits this
@@ -70,6 +76,9 @@ public class ManualCaptchaViewModel : ViewModelBase
 
     public ManualCaptchaViewModel()
     {
+        this.WhenAnyValue(x => x.ErrorMessage)
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(HasError)));
+
         CopyImageCommand = ReactiveCommand.CreateFromTask(async () =>
         {
             if (ImageBytes == null) return;
@@ -95,12 +104,21 @@ public class ManualCaptchaViewModel : ViewModelBase
 
         ConfirmCommand = ReactiveCommand.Create(() =>
         {
-            Tcs?.SetResult(new CaptchaResult
+            var answer = CaptchaAnswer.Trim();
+            if (string.IsNullOrWhiteSpace(answer))
+            {
+                ErrorMessage = "请输入验证码后再确认";
+                return;
+            }
+
+            ErrorMessage = "";
+            Tcs?.TrySetResult(new CaptchaResult
             {
                 Expression = CaptchaExpression,
-                Answer = CaptchaAnswer.Trim(),
-                Success = !string.IsNullOrWhiteSpace(CaptchaAnswer),
+                Answer = answer,
+                Success = true,
             });
+            CloseRequested?.Invoke();
         });
     }
 }

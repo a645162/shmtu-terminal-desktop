@@ -206,7 +206,7 @@ public class DataTransferViewModel : ViewModelBase
                 ImportFilePath = result[0];
         });
 
-        PreviewImportCommand = ReactiveCommand.CreateFromTask(PreviewImportAsync);
+        PreviewImportCommand = ReactiveCommand.Create(PreviewImport);
         StartImportCommand = ReactiveCommand.CreateFromTask(StartImportAsync);
 
         // Snapshot commands
@@ -282,7 +282,7 @@ public class DataTransferViewModel : ViewModelBase
         }
     }
 
-    private async Task PreviewImportAsync()
+    private void PreviewImport()
     {
         if (string.IsNullOrEmpty(ImportFilePath)) return;
 

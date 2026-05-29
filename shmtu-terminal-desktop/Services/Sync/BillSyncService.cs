@@ -159,7 +159,20 @@ public class BillSyncService
             LoggingService.Information("[BillSync] 开始增量同步 | MaxPages={Max} | EarlyStop={Early}",
                 syncOptions.MaxPages, syncOptions.EarlyStopThreshold);
 
-            var syncResult = await BillSync.IncrementalSyncAsync(epayAuth, store, syncOptions, cancellationToken);
+            var progressReporter = new Progress<PageSyncProgress>(p =>
+            {
+                OnProgressChanged(new SyncProgress
+                {
+                    AccountId = account.AccountId,
+                    AccountName = account.AccountName,
+                    CurrentPage = p.CurrentPage,
+                    TotalPages = p.TotalPages,
+                    NewCount = p.NewCount,
+                    Status = "syncing",
+                });
+            });
+
+            var syncResult = await BillSync.IncrementalSyncAsync(epayAuth, store, syncOptions, progressReporter, cancellationToken);
             LoggingService.Information("[BillSync] 增量同步完成 | AccountId={AccountId} | NewCount={New} ",
                 account.AccountId, syncResult.NewCount);
 
@@ -239,7 +252,20 @@ public class BillSyncService
             };
             LoggingService.Information("[BillSync] 开始完整同步（禁用提前停止）");
 
-            var syncResult = await BillSync.IncrementalSyncAsync(epayAuth, store, syncOptions, cancellationToken);
+            var progressReporter = new Progress<PageSyncProgress>(p =>
+            {
+                OnProgressChanged(new SyncProgress
+                {
+                    AccountId = account.AccountId,
+                    AccountName = account.AccountName,
+                    CurrentPage = p.CurrentPage,
+                    TotalPages = p.TotalPages,
+                    NewCount = p.NewCount,
+                    Status = "syncing",
+                });
+            });
+
+            var syncResult = await BillSync.IncrementalSyncAsync(epayAuth, store, syncOptions, progressReporter, cancellationToken);
             LoggingService.Information("[BillSync] 完整同步完成 | NewCount={New} | Total={Total}",
                 syncResult.NewCount, syncResult.PagesFetched);
 
@@ -365,24 +391,55 @@ public class BillSyncService
             LoggingService.Debug("[BillSync] 探测登录状态失败，将执行新登录 | Error={Error}", ex.Message);
         }
 
-        LoggingService.Information("[BillSync] 执行新登录 | AccountId={AccountId}", accountId);
-        var result = await epayAuth.SubmitLoginAsync(accountId, password, cancellationToken);
-        if (result is not LoginSubmitResult.Success)
+        // 带验证码重试的登录循环（与 BillDemo.LoginWithRetry 对齐）
+        const int maxAttempts = 5;
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
-            var errorMsg = result switch
+            LoggingService.Information("[BillSync] 第{Attempt}/{Max}次登录尝试 | AccountId={AccountId}", attempt, maxAttempts, accountId);
+
+            var result = await epayAuth.SubmitLoginAsync(accountId, password, cancellationToken);
+            switch (result)
             {
-                LoginSubmitResult.PasswordError => "密码错误",
-                LoginSubmitResult.ValidateCodeError => "验证码错误",
-                LoginSubmitResult.Failure f => f.Message,
-                _ => "登录失败",
-            };
-            LoggingService.Error("[BillSync] CAS 登录失败 | AccountId={AccountId} | Error={Error}", accountId, errorMsg);
-            epayAuth.Dispose();
-            throw new InvalidOperationException($"CAS登录失败: {errorMsg}");
+                case LoginSubmitResult.Success:
+                    if (await epayAuth.TestLoginStatusAsync(cancellationToken))
+                    {
+                        LoggingService.Information("[BillSync] CAS 登录成功 | AccountId={AccountId}", accountId);
+                        return epayAuth;
+                    }
+                    // TGC 自动认证后 session 仍无效 — 用干净客户端重试
+                    LoggingService.Warning("[BillSync] 登录验证失败（可能 TGC 残留），用干净客户端重试 | AccountId={AccountId}", accountId);
+                    epayAuth.Dispose();
+                    epayAuth = new EpayAuth(captchaResolver, new CasHttpClient());
+                    continue;
+
+                case LoginSubmitResult.ValidateCodeError:
+                    LoggingService.Warning("[BillSync] 验证码错误，重试中... | AccountId={AccountId} | Attempt={Attempt}", accountId, attempt);
+                    continue;
+
+                case LoginSubmitResult.PasswordError:
+                    epayAuth.Dispose();
+                    throw new InvalidOperationException("用户名或密码错误");
+
+                case LoginSubmitResult.Failure f:
+                    // TGC 残留导致的失败 — 用干净客户端重试
+                    if (f.Message.Contains("TGC") && attempt < maxAttempts)
+                    {
+                        LoggingService.Warning("[BillSync] TGC 残留导致登录失败，清除 cookie 重试 | AccountId={AccountId}", accountId);
+                        epayAuth.Dispose();
+                        epayAuth = new EpayAuth(captchaResolver, new CasHttpClient());
+                        continue;
+                    }
+                    epayAuth.Dispose();
+                    throw new InvalidOperationException($"CAS登录失败: {f.Message}");
+
+                default:
+                    epayAuth.Dispose();
+                    throw new InvalidOperationException("CAS登录失败: 未知状态");
+            }
         }
 
-        LoggingService.Information("[BillSync] CAS 登录成功 | AccountId={AccountId}", accountId);
-        return epayAuth;
+        epayAuth.Dispose();
+        throw new InvalidOperationException($"CAS登录失败: 超过最大重试次数 {maxAttempts}");
     }
 
     private static void RestoreCookiesToContainer(CookieContainer container, string cookiesStr)

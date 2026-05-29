@@ -3,7 +3,6 @@
         xmlns:vm="using:shmtu.terminal.desktop.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:material="using:Material.Styles"
         xmlns:tabViews="using:shmtu.terminal.desktop.Views.MainWindowTab"
         mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="650"
         x:Class="shmtu.terminal.desktop.Views.MainWindow"
@@ -12,8 +11,7 @@
         Title="海大终端"
         Width="1000" Height="650"
         MinWidth="800" MinHeight="500"
-        TransparencyLevelHint="AcrylicBlur"
-        Background="{DynamicResource MaterialDesignBackground}">
+        TransparencyLevelHint="AcrylicBlur">
 
     <Design.DataContext>
         <vm:MainWindowViewModel />
@@ -31,13 +29,13 @@
     <DockPanel>
         <!-- Identity Bar at Top -->
         <Border DockPanel.Dock="Top"
-                Background="{DynamicResource PrimaryHueMidBrush}"
-                Padding="16,8">
+                Background="{DynamicResource AppHeroBrush}"
+                Padding="22,14">
             <Grid ColumnDefinitions="*,Auto">
                 <!-- Left: App title -->
                 <TextBlock Grid.Column="0"
                            Text="海大终端"
-                           FontSize="16"
+                           FontSize="18"
                            FontWeight="SemiBold"
                            VerticalAlignment="Center"
                            Foreground="White" />
@@ -49,8 +47,8 @@
                             VerticalAlignment="Center">
                     <!-- Current identity badge -->
                     <Border Background="#33FFFFFF"
-                            CornerRadius="12"
-                            Padding="12,4"
+                            CornerRadius="14"
+                            Padding="14,6"
                             VerticalAlignment="Center">
                         <TextBlock Text="{Binding CurrentIdentityShortName}"
                                    Foreground="White"
@@ -62,19 +60,23 @@
                     <!-- Switch identity button -->
                     <Button Content="切换身份"
                             Command="{Binding SwitchIdentityCommand}"
-                            Background="#33FFFFFF"
+                            Background="#2EFFFFFF"
                             Foreground="White"
-                            CornerRadius="4"
-                            Padding="12,4"
+                            BorderBrush="#46FFFFFF"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="14,6"
                             FontSize="12" />
 
                     <!-- Manage identity button -->
                     <Button Content="管理"
                             Command="{Binding ManageIdentityCommand}"
-                            Background="#33FFFFFF"
+                            Background="#2EFFFFFF"
                             Foreground="White"
-                            CornerRadius="4"
-                            Padding="12,4"
+                            BorderBrush="#46FFFFFF"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="14,6"
                             FontSize="12" />
                 </StackPanel>
             </Grid>
@@ -83,7 +85,7 @@
         <!-- Status Bar at Bottom -->
         <Border DockPanel.Dock="Bottom"
                 Background="{DynamicResource MaterialDesignToolBarBackground}"
-                Padding="16,6">
+                Padding="18,10">
             <Grid ColumnDefinitions="Auto,*,Auto,Auto">
                 <TextBlock Grid.Column="0"
                            Text="{Binding CurrentIdentityName}"

@@ -2,8 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:material="using:Material.Styles"
-             xmlns:materialControls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+                          xmlns:appControls="using:shmtu.terminal.desktop.Controls"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="50"
              x:Class="shmtu.terminal.desktop.Views.Component.Bill.BillFilterUserControl">
 
@@ -18,14 +17,14 @@
                 VerticalAlignment="Center" />
 
         <!-- Search Box -->
-        <materialControls:Card DockPanel.Dock="Right"
+        <appControls:Card DockPanel.Dock="Right"
                        Padding="0"
                        Margin="8,0,0,0">
-            <TextBox Watermark="搜索交易名称、对方账户..."
+            <TextBox PlaceholderText="搜索交易名称、对方账户..."
                      Text="{Binding SearchText}"
                      Width="220"
                      VerticalAlignment="Center" />
-        </materialControls:Card>
+        </appControls:Card>
 
         <!-- Filter Controls -->
         <StackPanel Orientation="Horizontal" Spacing="8">

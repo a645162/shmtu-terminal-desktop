@@ -2,8 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:material="using:Material.Styles"
-        xmlns:vm="using:shmtu.terminal.desktop.ViewModels.User"
+                xmlns:vm="using:shmtu.terminal.desktop.ViewModels.User"
         mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="450"
         x:Class="shmtu.terminal.desktop.Views.User.AccountEditWindow"
         x:DataType="vm:AccountEditViewModel"
@@ -11,8 +10,7 @@
         Width="420" Height="450"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
-        TransparencyLevelHint="AcrylicBlur"
-        Background="{DynamicResource MaterialDesignBackground}">
+        TransparencyLevelHint="AcrylicBlur">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <Grid Margin="24" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,Auto">
@@ -20,14 +18,14 @@
             <TextBlock Grid.Row="0" Text="账号名称" FontSize="13" Margin="0,0,0,4" />
             <TextBox Grid.Row="1"
                      Text="{Binding AccountName}"
-                     Watermark="例如：本科校园卡"
+                     PlaceholderText="例如：本科校园卡"
                      Margin="0,0,0,12" />
 
             <!-- Student ID -->
             <TextBlock Grid.Row="2" Text="学号（12位数字）" FontSize="13" Margin="0,0,0,4" />
             <TextBox Grid.Row="3"
                      Text="{Binding AccountId}"
-                     Watermark="例如：202312345678"
+                     PlaceholderText="例如：202312345678"
                      Margin="0,0,0,12" />
 
             <!-- Password -->
@@ -47,7 +45,7 @@
             <TextBlock Grid.Row="6" Text="过期日期" FontSize="13" Margin="0,0,0,4" />
             <TextBox Grid.Row="7"
                      Text="{Binding ExpireDate}"
-                     Watermark="例如：2099-12-31"
+                     PlaceholderText="例如：2099-12-31"
                      Margin="0,0,0,12" />
 
             <!-- Options -->

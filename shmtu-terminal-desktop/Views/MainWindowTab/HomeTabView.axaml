@@ -2,8 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:material="using:Material.Styles"
-             xmlns:materialControls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+                          xmlns:appControls="using:shmtu.terminal.desktop.Controls"
              xmlns:component="using:shmtu.terminal.desktop.Views.Component"
              xmlns:countdown="using:shmtu.terminal.desktop.Views.Component.CountDown"
              mc:Ignorable="d" d:DesignWidth="960" d:DesignHeight="560"
@@ -14,7 +13,7 @@
         <!-- Summary Cards Row 1 -->
         <UniformGrid Rows="1" Columns="4">
             <!-- Today's Spending -->
-            <materialControls:Card Margin="0,0,8,0" Padding="16">
+            <appControls:Card Margin="0,0,8,0" Padding="16">
                 <StackPanel Spacing="4">
                     <TextBlock Text="今日消费"
                                FontSize="12"
@@ -26,10 +25,10 @@
                                FontSize="11"
                                Foreground="{DynamicResource MaterialDesignBodyLight}" />
                 </StackPanel>
-            </materialControls:Card>
+            </appControls:Card>
 
             <!-- This Month's Spending -->
-            <materialControls:Card Margin="8,0,8,0" Padding="16">
+            <appControls:Card Margin="8,0,8,0" Padding="16">
                 <StackPanel Spacing="4">
                     <TextBlock Text="本月消费"
                                FontSize="12"
@@ -41,10 +40,10 @@
                                FontSize="11"
                                Foreground="{DynamicResource MaterialDesignBodyLight}" />
                 </StackPanel>
-            </materialControls:Card>
+            </appControls:Card>
 
             <!-- This Month's Deposit -->
-            <materialControls:Card Margin="8,0,8,0" Padding="16">
+            <appControls:Card Margin="8,0,8,0" Padding="16">
                 <StackPanel Spacing="4">
                     <TextBlock Text="本月充值"
                                FontSize="12"
@@ -53,10 +52,10 @@
                                FontSize="24" FontWeight="Bold"
                                Foreground="#4CAF50" />
                 </StackPanel>
-            </materialControls:Card>
+            </appControls:Card>
 
             <!-- Card Balance -->
-            <materialControls:Card Margin="8,0,0,0" Padding="16">
+            <appControls:Card Margin="8,0,0,0" Padding="16">
                 <StackPanel Spacing="4">
                     <TextBlock Text="卡片余额"
                                FontSize="12"
@@ -65,11 +64,11 @@
                                FontSize="24" FontWeight="Bold"
                                Foreground="#1976D2" />
                 </StackPanel>
-            </materialControls:Card>
+            </appControls:Card>
         </UniformGrid>
 
         <!-- 7-Day Trend Chart -->
-        <materialControls:Card Padding="16">
+        <appControls:Card Padding="16">
             <StackPanel Spacing="8">
                 <DockPanel>
                     <TextBlock Text="近7日消费趋势"
@@ -86,12 +85,12 @@
                 <component:ChartUserControl Height="180"
                                             DataContext="{Binding WeeklyTrendChart}" />
             </StackPanel>
-        </materialControls:Card>
+        </appControls:Card>
 
         <!-- Semester Countdown -->
-        <materialControls:Card Padding="16">
+        <appControls:Card Padding="16">
             <countdown:CountDownWeekUserControl DataContext="{Binding CountdownViewModel}" />
-        </materialControls:Card>
+        </appControls:Card>
 
     </StackPanel>
 

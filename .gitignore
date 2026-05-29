@@ -2,7 +2,10 @@
 .omc/
 
 *.sqlite
+*.toml
+.device_key
 
+# Deep Learning
 *.onnx
 
 ## Ignore Visual Studio temporary files, build results, and

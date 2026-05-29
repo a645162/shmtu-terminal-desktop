@@ -2,8 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:material="using:Material.Styles"
-             xmlns:materialControls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+                          xmlns:appControls="using:shmtu.terminal.desktop.Controls"
              mc:Ignorable="d" d:DesignWidth="960" d:DesignHeight="560"
              x:Class="shmtu.terminal.desktop.Views.MainWindowTab.FeaturesTabView">
 
@@ -17,13 +16,13 @@
         <UniformGrid Rows="3" Columns="3">
 
             <!-- Statistics -->
-            <materialControls:Card Margin="4" Padding="16">
-                <materialControls:Card.ContextMenu>
+            <appControls:Card Margin="4" Padding="16">
+                <appControls:Card.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="打开统计分析"
                                   Command="{Binding OpenStatisticsCommand}" />
                     </ContextMenu>
-                </materialControls:Card.ContextMenu>
+                </appControls:Card.ContextMenu>
                 <Button Classes="Flat" HorizontalAlignment="Stretch"
                         Command="{Binding OpenStatisticsCommand}"
                         HorizontalContentAlignment="Left">
@@ -39,16 +38,16 @@
                         </StackPanel>
                     </StackPanel>
                 </Button>
-            </materialControls:Card>
+            </appControls:Card>
 
             <!-- Export -->
-            <materialControls:Card Margin="4" Padding="16">
-                <materialControls:Card.ContextMenu>
+            <appControls:Card Margin="4" Padding="16">
+                <appControls:Card.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="打开数据导出"
                                   Command="{Binding OpenDataExportCommand}" />
                     </ContextMenu>
-                </materialControls:Card.ContextMenu>
+                </appControls:Card.ContextMenu>
                 <Button Classes="Flat" HorizontalAlignment="Stretch"
                         Command="{Binding OpenDataExportCommand}"
                         HorizontalContentAlignment="Left">
@@ -64,16 +63,16 @@
                         </StackPanel>
                     </StackPanel>
                 </Button>
-            </materialControls:Card>
+            </appControls:Card>
 
             <!-- Import -->
-            <materialControls:Card Margin="4" Padding="16">
-                <materialControls:Card.ContextMenu>
+            <appControls:Card Margin="4" Padding="16">
+                <appControls:Card.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="打开数据导入"
                                   Command="{Binding OpenDataImportCommand}" />
                     </ContextMenu>
-                </materialControls:Card.ContextMenu>
+                </appControls:Card.ContextMenu>
                 <Button Classes="Flat" HorizontalAlignment="Stretch"
                         Command="{Binding OpenDataImportCommand}"
                         HorizontalContentAlignment="Left">
@@ -89,16 +88,16 @@
                         </StackPanel>
                     </StackPanel>
                 </Button>
-            </materialControls:Card>
+            </appControls:Card>
 
             <!-- Captcha Test -->
-            <materialControls:Card Margin="4" Padding="16">
-                <materialControls:Card.ContextMenu>
+            <appControls:Card Margin="4" Padding="16">
+                <appControls:Card.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="打开验证码测试"
                                   Command="{Binding OpenCaptchaTestCommand}" />
                     </ContextMenu>
-                </materialControls:Card.ContextMenu>
+                </appControls:Card.ContextMenu>
                 <Button Classes="Flat" HorizontalAlignment="Stretch"
                         Command="{Binding OpenCaptchaTestCommand}"
                         HorizontalContentAlignment="Left">
@@ -114,18 +113,18 @@
                         </StackPanel>
                     </StackPanel>
                 </Button>
-            </materialControls:Card>
+            </appControls:Card>
 
             <!-- Identity Management -->
-            <materialControls:Card Margin="4" Padding="16">
-                <materialControls:Card.ContextMenu>
+            <appControls:Card Margin="4" Padding="16">
+                <appControls:Card.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="打开身份管理"
                                   Command="{Binding OpenIdentityManagerCommand}" />
                         <MenuItem Header="添加新身份"
                                   Command="{Binding AddIdentityCommand}" />
                     </ContextMenu>
-                </materialControls:Card.ContextMenu>
+                </appControls:Card.ContextMenu>
                 <Button Classes="Flat" HorizontalAlignment="Stretch"
                         Command="{Binding OpenIdentityManagerCommand}"
                         HorizontalContentAlignment="Left">
@@ -141,16 +140,16 @@
                         </StackPanel>
                     </StackPanel>
                 </Button>
-            </materialControls:Card>
+            </appControls:Card>
 
             <!-- Settings -->
-            <materialControls:Card Margin="4" Padding="16">
-                <materialControls:Card.ContextMenu>
+            <appControls:Card Margin="4" Padding="16">
+                <appControls:Card.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="打开设置"
                                   Command="{Binding OpenSettingsCommand}" />
                     </ContextMenu>
-                </materialControls:Card.ContextMenu>
+                </appControls:Card.ContextMenu>
                 <Button Classes="Flat" HorizontalAlignment="Stretch"
                         Command="{Binding OpenSettingsCommand}"
                         HorizontalContentAlignment="Left">
@@ -166,18 +165,18 @@
                         </StackPanel>
                     </StackPanel>
                 </Button>
-            </materialControls:Card>
+            </appControls:Card>
 
             <!-- Snapshot -->
-            <materialControls:Card Margin="4" Padding="16">
-                <materialControls:Card.ContextMenu>
+            <appControls:Card Margin="4" Padding="16">
+                <appControls:Card.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="打开快照管理"
                                   Command="{Binding OpenSnapshotCommand}" />
                         <MenuItem Header="立即创建快照"
                                   Command="{Binding CreateSnapshotCommand}" />
                     </ContextMenu>
-                </materialControls:Card.ContextMenu>
+                </appControls:Card.ContextMenu>
                 <Button Classes="Flat" HorizontalAlignment="Stretch"
                         Command="{Binding OpenSnapshotCommand}"
                         HorizontalContentAlignment="Left">
@@ -193,16 +192,16 @@
                         </StackPanel>
                     </StackPanel>
                 </Button>
-            </materialControls:Card>
+            </appControls:Card>
 
             <!-- About -->
-            <materialControls:Card Margin="4" Padding="16">
-                <materialControls:Card.ContextMenu>
+            <appControls:Card Margin="4" Padding="16">
+                <appControls:Card.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="查看关于"
                                   Command="{Binding OpenAboutCommand}" />
                     </ContextMenu>
-                </materialControls:Card.ContextMenu>
+                </appControls:Card.ContextMenu>
                 <Button Classes="Flat" HorizontalAlignment="Stretch"
                         Command="{Binding OpenAboutCommand}"
                         HorizontalContentAlignment="Left">
@@ -218,16 +217,16 @@
                         </StackPanel>
                     </StackPanel>
                 </Button>
-            </materialControls:Card>
+            </appControls:Card>
 
             <!-- Check Update -->
-            <materialControls:Card Margin="4" Padding="16">
-                <materialControls:Card.ContextMenu>
+            <appControls:Card Margin="4" Padding="16">
+                <appControls:Card.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="检查更新"
                                   Command="{Binding CheckUpdateCommand}" />
                     </ContextMenu>
-                </materialControls:Card.ContextMenu>
+                </appControls:Card.ContextMenu>
                 <Button Classes="Flat" HorizontalAlignment="Stretch"
                         Command="{Binding CheckUpdateCommand}"
                         HorizontalContentAlignment="Left">
@@ -243,12 +242,12 @@
                         </StackPanel>
                     </StackPanel>
                 </Button>
-            </materialControls:Card>
+            </appControls:Card>
 
         </UniformGrid>
 
         <!-- Hot Water Query - Disabled -->
-        <materialControls:Card Margin="4,8" Padding="16" Opacity="0.5">
+        <appControls:Card Margin="4,8" Padding="16" Opacity="0.5">
             <Button Classes="Flat" HorizontalAlignment="Stretch"
                     IsEnabled="False"
                     HorizontalContentAlignment="Left">
@@ -264,7 +263,7 @@
                     </StackPanel>
                 </StackPanel>
             </Button>
-        </materialControls:Card>
+        </appControls:Card>
 
     </StackPanel>
 
