@@ -1,0 +1,112 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="340" d:DesignHeight="280"
+             x:Class="shmtu.terminal.desktop.Views.Component.SyncStatusPanel">
+
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="SyncRunningBorderBrush" Color="#0F6CBD" />
+        <SolidColorBrush x:Key="SyncRunningProgressBrush" Color="#0F6CBD" />
+        <SolidColorBrush x:Key="SyncCompletedBorderBrush" Color="#1A8F5A" />
+        <SolidColorBrush x:Key="SyncErrorBorderBrush" Color="#E86452" />
+        <SolidColorBrush x:Key="SyncCaptchaBorderBrush" Color="#F6BD16" />
+    </UserControl.Resources>
+
+    <Border Background="{DynamicResource MaterialDesignCardBackground}"
+            BorderBrush="{Binding StatusColor}"
+            BorderThickness="2"
+            CornerRadius="12"
+            BoxShadow="0 8 24 0 #33000000"
+            Padding="20"
+            Width="340">
+        <StackPanel Spacing="12">
+            <!-- Header: status dot + status text -->
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <!-- Status indicator dot -->
+                <Border Width="12" Height="12"
+                        CornerRadius="6"
+                        Background="{Binding StatusColor}" />
+                <TextBlock Text="{Binding StatusText}"
+                           FontSize="15"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center" />
+            </StackPanel>
+
+            <!-- Account progress -->
+            <StackPanel Spacing="4">
+                <TextBlock FontSize="13"
+                           Foreground="{DynamicResource AppTextSecondaryBrush}">
+                    <TextBlock.Text>
+                        <MultiBinding StringFormat="{}账号 {0}">
+                            <Binding Path="AccountProgress" />
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
+                <TextBlock Text="{Binding CurrentAccount}"
+                           FontSize="13"
+                           FontWeight="Medium"
+                           Foreground="{DynamicResource AppTextSecondaryBrush}" />
+            </StackPanel>
+
+            <!-- Progress bar -->
+            <StackPanel Spacing="4">
+                <ProgressBar Value="{Binding ProgressValue}"
+                             Minimum="0" Maximum="100"
+                             Height="6"
+                             CornerRadius="3"
+                             Foreground="{Binding StatusColor}"
+                             Background="{DynamicResource AppSurfaceAltBrush}" />
+                <TextBlock Text="{Binding ProgressText}"
+                           FontSize="11"
+                           Foreground="{DynamicResource AppTextSecondaryBrush}" />
+            </StackPanel>
+
+            <!-- Detail text / status log -->
+            <Border Background="{DynamicResource AppSurfaceAltBrush}"
+                    CornerRadius="8"
+                    Padding="10,8"
+                    MaxHeight="100">
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding StatusLog}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource AppTextSecondaryBrush}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,1" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Action button -->
+            <Button Command="{Binding DismissCommand}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    CornerRadius="8"
+                    Padding="0,8">
+                <Button.Content>
+                    <Panel>
+                        <!-- Cancel button (running state) -->
+                        <TextBlock Text="取消同步"
+                                   FontSize="13"
+                                   FontWeight="Medium"
+                                   HorizontalAlignment="Center"
+                                   IsVisible="{Binding IsRunning}" />
+                        <!-- Dismiss button (non-running state) -->
+                        <TextBlock Text="关闭"
+                                   FontSize="13"
+                                   FontWeight="Medium"
+                                   HorizontalAlignment="Center"
+                                   IsVisible="{Binding !IsRunning}" />
+                    </Panel>
+                </Button.Content>
+            </Button>
+        </StackPanel>
+    </Border>
+
+</UserControl>

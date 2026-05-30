@@ -11,8 +11,73 @@ namespace shmtu.terminal.desktop.Database.Common;
 /// </summary>
 public abstract class BaseDbSource
 {
-    public static readonly string DataDirectoryPath = "Data";
+    /// <summary>
+    /// 数据目录 — 使用操作系统标准的应用数据目录（对齐 Rust 版的 app_data_dir）。
+    /// Linux: ~/.local/share/shmtu-terminal-desktop/
+    /// Windows: %APPDATA%/shmtu-terminal-desktop/
+    /// macOS: ~/Library/Application Support/shmtu-terminal-desktop/
+    /// 如果系统目录不存在但本地 Data/ 存在（旧版数据），自动迁移。
+    /// </summary>
+    public static readonly string DataDirectoryPath = InitializeDataDirectory();
     private static readonly string DbExtension = "sqlite";
+
+    private static string InitializeDataDirectory()
+    {
+        var appName = "shmtu-terminal-desktop";
+        string systemDataDir;
+
+        if (OperatingSystem.IsLinux())
+        {
+            var xdg = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
+            systemDataDir = !string.IsNullOrEmpty(xdg)
+                ? Path.Combine(xdg, appName)
+                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share", appName);
+        }
+        else if (OperatingSystem.IsMacOS())
+        {
+            systemDataDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                "Library", "Application Support", appName);
+        }
+        else
+        {
+            systemDataDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), appName);
+        }
+
+        // 旧版数据迁移：如果系统目录不存在但本地 Data/ 存在
+        var legacyDataDir = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data"));
+        if (!Directory.Exists(systemDataDir) && Directory.Exists(legacyDataDir))
+        {
+            try
+            {
+                Directory.CreateDirectory(systemDataDir);
+                foreach (var file in Directory.GetFiles(legacyDataDir))
+                {
+                    var dest = Path.Combine(systemDataDir, Path.GetFileName(file));
+                    File.Move(file, dest);
+                }
+                foreach (var dir in Directory.GetDirectories(legacyDataDir))
+                {
+                    var dest = Path.Combine(systemDataDir, Path.GetFileName(dir));
+                    Directory.Move(dir, dest);
+                }
+                LoggingService.Information("[Database] 旧数据已迁移 | From={From} | To={To}", legacyDataDir, systemDataDir);
+            }
+            catch (Exception ex)
+            {
+                LoggingService.Warning("[Database] 旧数据迁移失败，使用系统目录 | Error={Error}", ex.Message);
+            }
+        }
+
+        if (!Directory.Exists(systemDataDir))
+        {
+            Directory.CreateDirectory(systemDataDir);
+        }
+
+        LoggingService.Information("[Database] 数据目录 | Path={Path}", systemDataDir);
+        return systemDataDir;
+    }
 
     /// <summary>
     /// Database connection string
@@ -101,9 +166,9 @@ public abstract class BaseDbSource
             }
         }
 
-        var absolutePath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
-        LoggingService.Verbose("[Database] 获取数据库绝对路径 | Path={Path}", absolutePath);
-        return absolutePath;
+        // DataDirectoryPath 已经是绝对路径，无需再拼接
+        LoggingService.Verbose("[Database] 数据库绝对路径 | Path={Path}", path);
+        return path;
     }
 
     public SqlSugarClient GetNewDbObj()

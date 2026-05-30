@@ -13,7 +13,9 @@ using shmtu.terminal.desktop.Models.Identity;
 using shmtu.terminal.desktop.Models.Config;
 using shmtu.terminal.desktop.Services.Config;
 using shmtu.terminal.desktop.Services.Navigation;
+using shmtu.terminal.desktop.Services.Sync;
 using shmtu.terminal.desktop.ViewModels.Component.Captcha;
+using shmtu.terminal.desktop.ViewModels.Component;
 using shmtu.terminal.desktop.ViewModels.MainWindowTab;
 using shmtu.terminal.desktop.ViewModels.Startup;
 using shmtu.terminal.desktop.ViewModels.User;
@@ -54,6 +56,24 @@ public class MainWindowViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _lastSyncTime, value);
     }
 
+    private string _themeIcon = ""; // WeatherSunny
+    public string ThemeIcon
+    {
+        get => _themeIcon;
+        set => this.RaiseAndSetIfChanged(ref _themeIcon, value);
+    }
+
+    private bool _isDarkTheme;
+    public bool IsDarkTheme
+    {
+        get => _isDarkTheme;
+        set => this.RaiseAndSetIfChanged(ref _isDarkTheme, value);
+    }
+
+    public string AppVersion { get; } = GetAppVersion();
+
+    public ReactiveCommand<Unit, Unit> ToggleThemeCommand { get; }
+
     private int _selectedTabIndex;
     public int SelectedTabIndex
     {
@@ -64,6 +84,7 @@ public class MainWindowViewModel : ViewModelBase
     public HomeTabViewModel HomeViewModel { get; }
     public BillTabViewModel BillViewModel { get; }
     public FeaturesTabViewModel FeaturesViewModel { get; }
+    public SyncStatusViewModel SyncStatusVm { get; }
 
     private int _currentIdentityId;
 
@@ -87,6 +108,7 @@ public class MainWindowViewModel : ViewModelBase
         HomeViewModel = new HomeTabViewModel();
         BillViewModel = new BillTabViewModel();
         FeaturesViewModel = new FeaturesTabViewModel();
+        SyncStatusVm = new SyncStatusViewModel();
 
         BillViewModel.SyncRequested += OnSyncRequested;
 
@@ -95,6 +117,7 @@ public class MainWindowViewModel : ViewModelBase
         {
             NavigationService.Instance.OpenWindow("IdentityManager", new IdentityManagerViewModel());
         });
+        ToggleThemeCommand = ReactiveCommand.Create(ToggleTheme);
 
         LoadAvailableIdentities();
     }
@@ -152,9 +175,8 @@ public class MainWindowViewModel : ViewModelBase
                 config.Captcha.RemoteOcrHost,
                 config.Captcha.RemoteOcrPort > 0 ? config.Captcha.RemoteOcrPort : 21601),
 
-            "local_onnx" => new RemoteOcrCaptchaResolver(
-                config.Captcha.RemoteOcrHost,
-                config.Captcha.RemoteOcrPort > 0 ? config.Captcha.RemoteOcrPort : 21601),
+            "local_onnx" => new ManualCaptchaResolver(async (imageData, ct) =>
+                await ShowManualCaptchaDialogAsync(imageData, ct)),
 
             _ => new ManualCaptchaResolver(async (imageData, ct) =>
             {
@@ -165,6 +187,8 @@ public class MainWindowViewModel : ViewModelBase
 
     /// <summary>
     /// 弹出 Avalonia 窗口让用户输入验证码
+    /// 当用户点击"刷新验证码"时，关闭对话框并返回空值，
+    /// 由外层重试循环重新获取验证码图片
     /// </summary>
     private async Task<CaptchaAnswer> ShowManualCaptchaDialogAsync(
         byte[] imageData,
@@ -195,7 +219,15 @@ public class MainWindowViewModel : ViewModelBase
             });
         }
 
+        void OnRefreshRequested()
+        {
+            // Close the dialog so the caller's retry loop will re-fetch the captcha
+            if (window.IsVisible)
+                window.Close();
+        }
+
         vm.CloseRequested += OnCloseRequested;
+        vm.RefreshRequested += OnRefreshRequested;
         window.Closed += OnClosed;
 
         using var cancellationRegistration = cancellationToken.Register(() =>
@@ -213,11 +245,18 @@ public class MainWindowViewModel : ViewModelBase
                 window.Close();
 
             await dialogTask;
+
+            // If user requested a refresh, return empty answer so the retry loop
+            // in SubmitLoginAsync will fetch a new captcha image
+            if (result.IsRefresh)
+                return new CaptchaAnswer("", CaptchaAnswerKind.Answer);
+
             return new CaptchaAnswer(result.Answer, CaptchaAnswerKind.Answer);
         }
         finally
         {
             vm.CloseRequested -= OnCloseRequested;
+            vm.RefreshRequested -= OnRefreshRequested;
             window.Closed -= OnClosed;
         }
     }
@@ -299,17 +338,24 @@ public class MainWindowViewModel : ViewModelBase
 
         SyncStatus = "同步中...";
 
-        // 通过 ServiceLocator 解析（修复 HIGH 11）
-        var syncService = new Services.Sync.BillSyncService();
+        var syncService = new BillSyncService();
+
+        // Count enabled accounts for the floating panel
+        var accounts = AccountDb.GetEnabledByIdentityId(_currentIdentityId);
+        SyncStatusVm.StartSync(accounts.Count);
 
         syncService.ProgressChanged += progress =>
         {
+            SyncStatusVm.UpdateProgress(progress);
+
+            // Also update the legacy SyncStatus for the status bar
             SyncStatus = progress.Status switch
             {
                 "syncing" when progress.TotalPages > 0 =>
                     $"正在同步: {progress.AccountName} 第{progress.CurrentPage}/{progress.TotalPages}页 (+{progress.NewCount}条)",
                 "syncing" =>
                     $"正在同步: {progress.AccountName}...",
+                "captcha_error" => $"验证码错误，正在重试: {progress.AccountName}",
                 "completed" => $"已完成: {progress.AccountName} (+{progress.NewCount}条)",
                 "failed" => $"失败: {progress.AccountName}",
                 _ => progress.Status,
@@ -326,6 +372,8 @@ public class MainWindowViewModel : ViewModelBase
             SyncStatus = $"同步完成: {result.SuccessCount}成功, {result.FailedCount}失败, +{result.TotalNewBills}条";
             LastSyncTime = $"最后同步: {DateTime.Now:HH:mm:ss}";
 
+            SyncStatusVm.ShowCompleted(result.TotalNewBills);
+
             HomeViewModel.RefreshData();
             BillViewModel.RefreshData();
         }
@@ -333,6 +381,7 @@ public class MainWindowViewModel : ViewModelBase
         {
             SyncStatus = $"同步失败: {ex.Message}";
             ErrorMessage = $"同步错误: {ex.Message}";
+            SyncStatusVm.ShowError(ex.Message);
         }
         finally
         {
@@ -347,5 +396,49 @@ public class MainWindowViewModel : ViewModelBase
     private void OnSyncRequested()
     {
         _ = OnSyncRequestedAsync(CancellationToken.None);
+    }
+
+    /// <summary>
+    /// Toggle between light and dark theme
+    /// </summary>
+    private void ToggleTheme()
+    {
+        IsDarkTheme = !IsDarkTheme;
+
+        if (Application.Current != null)
+        {
+            Application.Current.RequestedThemeVariant = IsDarkTheme
+                ? Avalonia.Styling.ThemeVariant.Dark
+                : Avalonia.Styling.ThemeVariant.Light;
+        }
+
+        // MDL2 icons:  = WeatherMoon,  = WeatherSunny
+        ThemeIcon = IsDarkTheme ? "" : "";
+
+        // Persist theme to config
+        try
+        {
+            TomlConfigService.UpdateAppConfig(config =>
+            {
+                config.Ui.Theme = IsDarkTheme ? "dark" : "light";
+            });
+        }
+        catch
+        {
+            // Ignore config save errors
+        }
+    }
+
+    private static string GetAppVersion()
+    {
+        try
+        {
+            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            return version != null ? $"{version.Major}.{version.Minor}.{version.Build}" : "0.1.0";
+        }
+        catch
+        {
+            return "0.1.0";
+        }
     }
 }

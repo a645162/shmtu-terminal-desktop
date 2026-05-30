@@ -34,7 +34,8 @@ public class FeaturesTabViewModel : ViewModelBase
     {
         var nav = NavigationService.Instance;
 
-        OpenStatisticsCommand = ReactiveCommand.Create(() => nav.SwitchTab(1));
+        OpenStatisticsCommand = ReactiveCommand.Create(() =>
+            nav.OpenWindow("Statistics", new StatisticsViewModel()));
 
         OpenDataExportCommand = ReactiveCommand.Create(() =>
             nav.OpenWindow("DataTransfer", new DataTransferViewModel { SelectedTabIndex = 0 }));

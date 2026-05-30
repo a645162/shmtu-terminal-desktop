@@ -2,96 +2,163 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                          xmlns:appControls="using:shmtu.terminal.desktop.Controls"
+             xmlns:appControls="using:shmtu.terminal.desktop.Controls"
              xmlns:component="using:shmtu.terminal.desktop.Views.Component"
              xmlns:countdown="using:shmtu.terminal.desktop.Views.Component.CountDown"
              mc:Ignorable="d" d:DesignWidth="960" d:DesignHeight="560"
              x:Class="shmtu.terminal.desktop.Views.MainWindowTab.HomeTabView">
 
-    <StackPanel Margin="24,16" Spacing="16">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="24,16" Spacing="16">
 
-        <!-- Summary Cards Row 1 -->
-        <UniformGrid Rows="1" Columns="4">
-            <!-- Today's Spending -->
-            <appControls:Card Margin="0,0,8,0" Padding="16">
-                <StackPanel Spacing="4">
-                    <TextBlock Text="今日消费"
-                               FontSize="12"
-                               Foreground="{DynamicResource MaterialDesignBodyLight}" />
-                    <TextBlock Text="{Binding TodaySpending}"
-                               FontSize="24" FontWeight="Bold"
-                               Foreground="#F44336" />
-                    <TextBlock Text="{Binding TodayComparison}"
-                               FontSize="11"
-                               Foreground="{DynamicResource MaterialDesignBodyLight}" />
+            <!-- Summary Cards Row 1 -->
+            <UniformGrid Rows="1" Columns="4">
+                <!-- Today's Spending -->
+                <appControls:Card Margin="0,0,6,0" Padding="16">
+                    <StackPanel Spacing="4">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="&#xECC9;" FontSize="16" FontFamily="Segoe MDL2 Assets"
+                                       Foreground="#E86452" VerticalAlignment="Center" />
+                            <TextBlock Text="今日消费"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding TodaySpending}"
+                                   FontSize="24" FontWeight="Bold"
+                                   Foreground="#E86452" />
+                        <TextBlock Text="{Binding TodayComparison}"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                    </StackPanel>
+                </appControls:Card>
+
+                <!-- This Month's Spending -->
+                <appControls:Card Margin="6,0,6,0" Padding="16">
+                    <StackPanel Spacing="4">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="&#xECC9;" FontSize="16" FontFamily="Segoe MDL2 Assets"
+                                       Foreground="#E86452" VerticalAlignment="Center" />
+                            <TextBlock Text="本月消费"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding MonthSpending}"
+                                   FontSize="24" FontWeight="Bold"
+                                   Foreground="#E86452" />
+                        <TextBlock Text="{Binding MonthComparison}"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                    </StackPanel>
+                </appControls:Card>
+
+                <!-- This Month's Deposit -->
+                <appControls:Card Margin="6,0,6,0" Padding="16">
+                    <StackPanel Spacing="4">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="&#xE8C8;" FontSize="16" FontFamily="Segoe MDL2 Assets"
+                                       Foreground="#1A8F5A" VerticalAlignment="Center" />
+                            <TextBlock Text="本月充值"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding MonthDeposit}"
+                                   FontSize="24" FontWeight="Bold"
+                                   Foreground="#1A8F5A" />
+                    </StackPanel>
+                </appControls:Card>
+
+                <!-- Card Balance -->
+                <appControls:Card Margin="6,0,0,0" Padding="16">
+                    <StackPanel Spacing="4">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="&#xE9D9;" FontSize="16" FontFamily="Segoe MDL2 Assets"
+                                       Foreground="#0F6CBD" VerticalAlignment="Center" />
+                            <TextBlock Text="卡片余额"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding CardBalance}"
+                                   FontSize="24" FontWeight="Bold"
+                                   Foreground="#0F6CBD" />
+                    </StackPanel>
+                </appControls:Card>
+            </UniformGrid>
+
+            <!-- Two-column charts: Trend + Category Pie -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <!-- 7-Day Trend Chart -->
+                <appControls:Card Padding="16">
+                    <StackPanel Spacing="8">
+                        <DockPanel>
+                            <TextBlock Text="近7日消费趋势"
+                                       FontSize="14" FontWeight="SemiBold"
+                                       DockPanel.Dock="Left"
+                                       VerticalAlignment="Center" />
+                            <Button Content="查看更多"
+                                    DockPanel.Dock="Right"
+                                    HorizontalAlignment="Right"
+                                    Classes="Flat"
+                                    FontSize="12"
+                                    Command="{Binding ShowTrendDetailCommand}" />
+                        </DockPanel>
+                        <component:ChartUserControl Height="180"
+                                                    DataContext="{Binding WeeklyTrendChart}" />
+                    </StackPanel>
+                </appControls:Card>
+
+                <!-- Category Distribution (simplified) -->
+                <appControls:Card Padding="16">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="消费分类占比"
+                                   FontSize="14" FontWeight="SemiBold" />
+                        <ItemsControl ItemsSource="{Binding CategorySummary}" MaxHeight="160">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnDefinitions="Auto,Auto,Auto" Margin="0,3">
+                                        <Border Background="{Binding Color}" CornerRadius="3" Width="12" Height="12" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Name}" FontSize="12" Width="80" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Value}" FontSize="12" VerticalAlignment="Center" Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </appControls:Card>
+            </Grid>
+
+            <!-- Recent Transactions -->
+            <appControls:Card Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="最近交易" FontSize="14" FontWeight="SemiBold" />
+                    <ItemsControl ItemsSource="{Binding RecentTransactions}" MaxHeight="200">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,4">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{Binding Name}" FontSize="13" />
+                                        <TextBlock Text="{Binding Date}" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding Amount}" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{Binding AmountColor}"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Panel IsVisible="{Binding HasNoRecentTransactions}">
+                        <TextBlock Text="暂无交易记录" FontSize="12"
+                                   Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                   HorizontalAlignment="Center" Margin="0,16" />
+                    </Panel>
                 </StackPanel>
             </appControls:Card>
 
-            <!-- This Month's Spending -->
-            <appControls:Card Margin="8,0,8,0" Padding="16">
-                <StackPanel Spacing="4">
-                    <TextBlock Text="本月消费"
-                               FontSize="12"
-                               Foreground="{DynamicResource MaterialDesignBodyLight}" />
-                    <TextBlock Text="{Binding MonthSpending}"
-                               FontSize="24" FontWeight="Bold"
-                               Foreground="#F44336" />
-                    <TextBlock Text="{Binding MonthComparison}"
-                               FontSize="11"
-                               Foreground="{DynamicResource MaterialDesignBodyLight}" />
-                </StackPanel>
+            <!-- Semester Countdown -->
+            <appControls:Card Padding="16">
+                <countdown:CountDownWeekUserControl DataContext="{Binding CountdownViewModel}" />
             </appControls:Card>
 
-            <!-- This Month's Deposit -->
-            <appControls:Card Margin="8,0,8,0" Padding="16">
-                <StackPanel Spacing="4">
-                    <TextBlock Text="本月充值"
-                               FontSize="12"
-                               Foreground="{DynamicResource MaterialDesignBodyLight}" />
-                    <TextBlock Text="{Binding MonthDeposit}"
-                               FontSize="24" FontWeight="Bold"
-                               Foreground="#4CAF50" />
-                </StackPanel>
-            </appControls:Card>
-
-            <!-- Card Balance -->
-            <appControls:Card Margin="8,0,0,0" Padding="16">
-                <StackPanel Spacing="4">
-                    <TextBlock Text="卡片余额"
-                               FontSize="12"
-                               Foreground="{DynamicResource MaterialDesignBodyLight}" />
-                    <TextBlock Text="{Binding CardBalance}"
-                               FontSize="24" FontWeight="Bold"
-                               Foreground="#1976D2" />
-                </StackPanel>
-            </appControls:Card>
-        </UniformGrid>
-
-        <!-- 7-Day Trend Chart -->
-        <appControls:Card Padding="16">
-            <StackPanel Spacing="8">
-                <DockPanel>
-                    <TextBlock Text="近7日消费趋势"
-                               FontSize="14" FontWeight="SemiBold"
-                               DockPanel.Dock="Left"
-                               VerticalAlignment="Center" />
-                    <Button Content="查看更多"
-                            DockPanel.Dock="Right"
-                            HorizontalAlignment="Right"
-                            Classes="Flat"
-                            FontSize="12"
-                            Command="{Binding ShowTrendDetailCommand}" />
-                </DockPanel>
-                <component:ChartUserControl Height="180"
-                                            DataContext="{Binding WeeklyTrendChart}" />
-            </StackPanel>
-        </appControls:Card>
-
-        <!-- Semester Countdown -->
-        <appControls:Card Padding="16">
-            <countdown:CountDownWeekUserControl DataContext="{Binding CountdownViewModel}" />
-        </appControls:Card>
-
-    </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
 
 </UserControl>

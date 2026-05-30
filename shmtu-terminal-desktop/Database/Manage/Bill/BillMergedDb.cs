@@ -378,6 +378,128 @@ public static class BillMergedDb
         };
     }
 
+    /// <summary>
+    /// 更新账单备注
+    /// </summary>
+    public static bool UpdateNotes(int identityId, int billId, string notes)
+    {
+        LoggingService.Information("[BillMergedDb] 更新账单备注 | IdentityId={IdentityId} | Id={Id}", identityId, billId);
+        var db = GetDb(identityId);
+        var bill = db.Queryable<BillMerged>().Where(b => b.Id == billId).First();
+        if (bill == null)
+        {
+            LoggingService.Warning("[BillMergedDb] 要更新备注的账单不存在 | Id={Id}", billId);
+            return false;
+        }
+        bill.Notes = notes;
+        var result = db.Updateable(bill).UpdateColumns(b => b.Notes).ExecuteCommand() > 0;
+        LoggingService.Information("[BillMergedDb] 备注更新完成 | Success={Success}", result);
+        return result;
+    }
+
+    /// <summary>
+    /// 合并多条账单到主账单
+    /// 将被合并账单标记为已合并，并将交易号列表追加到主账单
+    /// </summary>
+    public static bool MergeBills(int identityId, int primaryId, List<int> selectedIds, string? mergeNote = null)
+    {
+        LoggingService.Information("[BillMergedDb] 合并账单 | IdentityId={IdentityId} | PrimaryId={PrimaryId} | Count={Count}",
+            identityId, primaryId, selectedIds.Count);
+
+        var db = GetDb(identityId);
+
+        db.Ado.BeginTran();
+        try
+        {
+            var primary = db.Queryable<BillMerged>().Where(b => b.Id == primaryId).First();
+            if (primary == null)
+            {
+                LoggingService.Warning("[BillMergedDb] 主账单不存在 | Id={Id}", primaryId);
+                db.Ado.RollbackTran();
+                return false;
+            }
+
+            // Collect all numbers from selected bills
+            var allNumbers = new List<string>();
+            if (!string.IsNullOrEmpty(primary.NumberList))
+            {
+                try
+                {
+                    var existing = JsonSerializer.Deserialize<List<string>>(primary.NumberList);
+                    if (existing != null) allNumbers.AddRange(existing);
+                }
+                catch { /* ignore parse errors */ }
+            }
+            if (!string.IsNullOrEmpty(primary.Number))
+            {
+                if (!allNumbers.Contains(primary.Number)) allNumbers.Add(primary.Number);
+            }
+
+            double totalMoney = primary.Money ?? 0;
+
+            foreach (var sid in selectedIds)
+            {
+                var bill = db.Queryable<BillMerged>().Where(b => b.Id == sid).First();
+                if (bill == null) continue;
+
+                // Collect numbers
+                if (!string.IsNullOrEmpty(bill.NumberList))
+                {
+                    try
+                    {
+                        var nums = JsonSerializer.Deserialize<List<string>>(bill.NumberList);
+                        if (nums != null) allNumbers.AddRange(nums.Where(n => !allNumbers.Contains(n)));
+                    }
+                    catch { /* ignore */ }
+                }
+                if (!string.IsNullOrEmpty(bill.Number) && !allNumbers.Contains(bill.Number))
+                {
+                    allNumbers.Add(bill.Number);
+                }
+
+                // Accumulate money
+                totalMoney += bill.Money ?? 0;
+
+                // Mark as combined and delete
+                bill.IsCombined = true;
+                db.Updateable(bill).UpdateColumns(b => b.IsCombined).ExecuteCommand();
+                db.Deleteable<BillMerged>().Where(b => b.Id == sid).ExecuteCommand();
+            }
+
+            // Update primary bill
+            primary.NumberList = JsonSerializer.Serialize(allNumbers);
+            primary.Money = totalMoney;
+            primary.MoneyStr = $"{totalMoney:F2}";
+            primary.IsCombined = true;
+            if (!string.IsNullOrEmpty(mergeNote))
+                primary.Notes = string.IsNullOrEmpty(primary.Notes) ? mergeNote : $"{primary.Notes}; {mergeNote}";
+
+            db.Updateable(primary)
+                .UpdateColumns(b => new { b.NumberList, b.Money, b.MoneyStr, b.IsCombined, b.Notes })
+                .ExecuteCommand();
+
+            // Log the operation
+            db.Insertable(new OperationLog
+            {
+                OperationType = "merge",
+                RecordNumbers = primary.NumberList,
+                OperationTime = DateTime.Now.ToString("o"),
+                Description = $"合并 {selectedIds.Count} 条账单到主账单 #{primaryId}",
+                AccountId = primary.SourceAccountId,
+            }).ExecuteCommand();
+
+            db.Ado.CommitTran();
+            LoggingService.Information("[BillMergedDb] 合并账单完成 | PrimaryId={PrimaryId}", primaryId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            db.Ado.RollbackTran();
+            LoggingService.Error(ex, "[BillMergedDb] 合并账单失败，已回滚");
+            throw;
+        }
+    }
+
     #region 分类统计方法
 
     /// <summary>

@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="using:shmtu.terminal.desktop.Controls">
 
+    <!-- ==================== Light Theme ==================== -->
     <Styles.Resources>
         <SolidColorBrush x:Key="AppCanvasBrush" Color="#F3F7FB" />
         <SolidColorBrush x:Key="AppSurfaceBrush" Color="#FFFFFFFF" />
@@ -27,10 +28,44 @@
         <SolidColorBrush x:Key="PrimaryHueMidBrush" Color="#0F6CBD" />
     </Styles.Resources>
 
+    <!-- ==================== Dark Theme Overrides ==================== -->
+    <Style Selector=":dark">
+        <Style.Resources>
+            <SolidColorBrush x:Key="AppCanvasBrush" Color="#1A1A2E" />
+            <SolidColorBrush x:Key="AppSurfaceBrush" Color="#16213E" />
+            <SolidColorBrush x:Key="AppSurfaceAltBrush" Color="#1A2744" />
+            <SolidColorBrush x:Key="AppSurfaceSoftBrush" Color="#1A1F36" />
+            <SolidColorBrush x:Key="AppBorderBrush" Color="#2D3A5C" />
+            <SolidColorBrush x:Key="AppTextSecondaryBrush" Color="#8B95A5" />
+            <SolidColorBrush x:Key="AppAccentBrush" Color="#4BB1F0" />
+            <SolidColorBrush x:Key="AppAccentSoftBrush" Color="#1A2744" />
+            <SolidColorBrush x:Key="AppSuccessBrush" Color="#5AD8A6" />
+            <SolidColorBrush x:Key="AppDangerBrush" Color="#E86452" />
+            <LinearGradientBrush x:Key="AppHeroBrush" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#0A3D6E" Offset="0" />
+                <GradientStop Color="#125A8E" Offset="0.55" />
+                <GradientStop Color="#1A7BB5" Offset="1" />
+            </LinearGradientBrush>
+
+            <SolidColorBrush x:Key="MaterialDesignBackground" Color="#1A1A2E" />
+            <SolidColorBrush x:Key="MaterialDesignToolBarBackground" Color="#16213E" />
+            <SolidColorBrush x:Key="MaterialDesignCardBackground" Color="#16213E" />
+            <SolidColorBrush x:Key="MaterialDesignChipBackground" Color="#1A2744" />
+            <SolidColorBrush x:Key="MaterialDesignBodyLight" Color="#8B95A5" />
+            <SolidColorBrush x:Key="PrimaryHueMidBrush" Color="#4BB1F0" />
+        </Style.Resources>
+    </Style>
+
+    <!-- ==================== Global Styles ==================== -->
     <Style Selector="Window">
         <Setter Property="Background" Value="{DynamicResource AppCanvasBrush}" />
         <Setter Property="Foreground" Value="#16202A" />
         <Setter Property="FontFamily" Value="avares://Avalonia.Fonts.Inter#Inter" />
+    </Style>
+
+    <!-- Dark mode foreground override -->
+    <Style Selector=":dark Window">
+        <Setter Property="Foreground" Value="#E0E6ED" />
     </Style>
 
     <Style Selector="TextBlock">
@@ -54,6 +89,14 @@
         <Setter Property="Background" Value="#C8DBEF" />
     </Style>
 
+    <Style Selector=":dark Button:pointerover">
+        <Setter Property="Background" Value="#243354" />
+    </Style>
+
+    <Style Selector=":dark Button:pressed">
+        <Setter Property="Background" Value="#2D3A5C" />
+    </Style>
+
     <Style Selector="Button.Primary">
         <Setter Property="Background" Value="{DynamicResource AppAccentBrush}" />
         <Setter Property="Foreground" Value="White" />
@@ -68,6 +111,11 @@
     <Style Selector="Button.Primary:pressed">
         <Setter Property="Background" Value="#084A85" />
         <Setter Property="BorderBrush" Value="#084A85" />
+    </Style>
+
+    <Style Selector=":dark Button.Primary:pointerover">
+        <Setter Property="Background" Value="#3A9ADE" />
+        <Setter Property="BorderBrush" Value="#3A9ADE" />
     </Style>
 
     <Style Selector="Button.Flat">
@@ -86,12 +134,21 @@
         <Setter Property="BorderBrush" Value="#CFE2F6" />
     </Style>
 
+    <Style Selector=":dark Button.Flat:pointerover">
+        <Setter Property="Background" Value="#1A2744" />
+        <Setter Property="BorderBrush" Value="#1A2744" />
+    </Style>
+
     <Style Selector="TextBox, ComboBox, NumericUpDown, DatePicker, AutoCompleteBox">
         <Setter Property="MinHeight" Value="38" />
     </Style>
 
     <Style Selector="TextBox, ComboBox, NumericUpDown">
         <Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}" />
+    </Style>
+
+    <Style Selector=":dark TextBox, :dark ComboBox, :dark NumericUpDown">
+        <Setter Property="Foreground" Value="#E0E6ED" />
     </Style>
 
     <Style Selector="ListBox">
@@ -123,6 +180,10 @@
         <Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}" />
     </Style>
 
+    <Style Selector=":dark DataGrid">
+        <Setter Property="Foreground" Value="#E0E6ED" />
+    </Style>
+
     <Style Selector="Border.section-panel">
         <Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}" />
@@ -138,4 +199,10 @@
         <Setter Property="CornerRadius" Value="16" />
         <Setter Property="BoxShadow" Value="0 14 32 0 #140F172A" />
     </Style>
+
+    <!-- Scrollbar styling matching Rust version -->
+    <Style Selector="ScrollViewer">
+        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+    </Style>
+
 </Styles>

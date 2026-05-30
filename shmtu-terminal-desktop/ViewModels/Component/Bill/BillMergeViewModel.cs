@@ -54,6 +54,28 @@ public class BillMergeViewModel : ViewModelBase
 
     private void Save()
     {
-        Saved?.Invoke();
+        if (PrimaryBill == null) return;
+
+        var selectedIds = SelectableBills
+            .Where(b => b.IsSelectedForMerge)
+            .Select(b => b.Id)
+            .ToList();
+
+        if (selectedIds.Count == 0)
+        {
+            ErrorMessage = "请至少选择一条账单进行合并";
+            return;
+        }
+
+        try
+        {
+            InitDb.InitIdentityDb(_identityId);
+            BillMergedDb.MergeBills(_identityId, PrimaryBill.Id, selectedIds, MergeNote);
+            Saved?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"合并失败: {ex.Message}";
+        }
     }
 }

@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:tabViews="using:shmtu.terminal.desktop.Views.MainWindowTab"
+        xmlns:components="using:shmtu.terminal.desktop.Views.Component"
         mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="650"
         x:Class="shmtu.terminal.desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -18,7 +19,7 @@
     </Design.DataContext>
 
     <Window.Styles>
-        <!-- Tab style overrides for Material look -->
+        <!-- Tab style overrides for Fluent look -->
         <Style Selector="TabItem">
             <Setter Property="FontSize" Value="14" />
             <Setter Property="FontWeight" Value="Medium" />
@@ -26,115 +27,139 @@
         </Style>
     </Window.Styles>
 
-    <DockPanel>
-        <!-- Identity Bar at Top -->
-        <Border DockPanel.Dock="Top"
-                Background="{DynamicResource AppHeroBrush}"
-                Padding="22,14">
-            <Grid ColumnDefinitions="*,Auto">
-                <!-- Left: App title -->
-                <TextBlock Grid.Column="0"
-                           Text="海大终端"
-                           FontSize="18"
-                           FontWeight="SemiBold"
-                           VerticalAlignment="Center"
-                           Foreground="White" />
+    <!-- Root Panel allows overlay of floating panels -->
+    <Panel>
+        <DockPanel>
+            <!-- Identity Bar at Top -->
+            <Border DockPanel.Dock="Top"
+                    Background="{DynamicResource AppHeroBrush}"
+                    Padding="22,14">
+                <Grid ColumnDefinitions="*,Auto">
+                    <!-- Left: App title -->
+                    <TextBlock Grid.Column="0"
+                               Text="海大终端"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"
+                               Foreground="White" />
 
-                <!-- Right: Identity selector -->
-                <StackPanel Grid.Column="1"
-                            Orientation="Horizontal"
-                            Spacing="8"
-                            VerticalAlignment="Center">
-                    <!-- Current identity badge -->
-                    <Border Background="#33FFFFFF"
-                            CornerRadius="14"
-                            Padding="14,6"
-                            VerticalAlignment="Center">
-                        <TextBlock Text="{Binding CurrentIdentityShortName}"
-                                   Foreground="White"
-                                   FontSize="13"
-                                   FontWeight="Medium"
-                                   VerticalAlignment="Center" />
-                    </Border>
+                    <!-- Right: Identity selector + theme toggle -->
+                    <StackPanel Grid.Column="1"
+                                Orientation="Horizontal"
+                                Spacing="8"
+                                VerticalAlignment="Center">
+                        <!-- Theme toggle button -->
+                        <Button Command="{Binding ToggleThemeCommand}"
+                                Background="#2EFFFFFF"
+                                Foreground="White"
+                                BorderBrush="#46FFFFFF"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="10,6"
+                                FontSize="12"
+                                ToolTip.Tip="切换主题">
+                            <TextBlock Text="{Binding ThemeIcon}"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       FontSize="14"
+                                       VerticalAlignment="Center" />
+                        </Button>
 
-                    <!-- Switch identity button -->
-                    <Button Content="切换身份"
-                            Command="{Binding SwitchIdentityCommand}"
-                            Background="#2EFFFFFF"
-                            Foreground="White"
-                            BorderBrush="#46FFFFFF"
-                            BorderThickness="1"
-                            CornerRadius="10"
-                            Padding="14,6"
-                            FontSize="12" />
+                        <!-- Current identity badge -->
+                        <Border Background="#33FFFFFF"
+                                CornerRadius="14"
+                                Padding="14,6"
+                                VerticalAlignment="Center">
+                            <TextBlock Text="{Binding CurrentIdentityShortName}"
+                                       Foreground="White"
+                                       FontSize="13"
+                                       FontWeight="Medium"
+                                       VerticalAlignment="Center" />
+                        </Border>
 
-                    <!-- Manage identity button -->
-                    <Button Content="管理"
-                            Command="{Binding ManageIdentityCommand}"
-                            Background="#2EFFFFFF"
-                            Foreground="White"
-                            BorderBrush="#46FFFFFF"
-                            BorderThickness="1"
-                            CornerRadius="10"
-                            Padding="14,6"
-                            FontSize="12" />
-                </StackPanel>
+                        <!-- Switch identity button -->
+                        <Button Content="切换身份"
+                                Command="{Binding SwitchIdentityCommand}"
+                                Background="#2EFFFFFF"
+                                Foreground="White"
+                                BorderBrush="#46FFFFFF"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="14,6"
+                                FontSize="12" />
+
+                        <!-- Manage identity button -->
+                        <Button Content="管理"
+                                Command="{Binding ManageIdentityCommand}"
+                                Background="#2EFFFFFF"
+                                Foreground="White"
+                                BorderBrush="#46FFFFFF"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="14,6"
+                                FontSize="12" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Status Bar at Bottom -->
+            <Border DockPanel.Dock="Bottom"
+                    Background="{DynamicResource MaterialDesignToolBarBackground}"
+                    Padding="18,10">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding CurrentIdentityName}"
+                               VerticalAlignment="Center"
+                               FontSize="12"
+                               Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                    <TextBlock Grid.Column="2"
+                               VerticalAlignment="Center"
+                               FontSize="12"
+                               Foreground="{DynamicResource MaterialDesignBodyLight}">
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="{}SHMTU Terminal v{0} | .NET + Avalonia">
+                                <Binding Path="AppVersion" />
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                </Grid>
+            </Border>
+
+            <!-- Main Content Area -->
+            <Grid>
+                <TabControl Name="MainTabControl"
+                            SelectedIndex="{Binding SelectedTabIndex}">
+
+                    <!-- Home Tab -->
+                    <TabItem Header="首页">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled">
+                            <tabViews:HomeTabView DataContext="{Binding HomeViewModel}" />
+                        </ScrollViewer>
+                    </TabItem>
+
+                    <!-- Bill Tab -->
+                    <TabItem Header="账单">
+                        <tabViews:BillTabView DataContext="{Binding BillViewModel}" />
+                    </TabItem>
+
+                    <!-- Features Tab -->
+                    <TabItem Header="功能大全">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled">
+                            <tabViews:FeaturesTabView DataContext="{Binding FeaturesViewModel}" />
+                        </ScrollViewer>
+                    </TabItem>
+
+                </TabControl>
             </Grid>
-        </Border>
+        </DockPanel>
 
-        <!-- Status Bar at Bottom -->
-        <Border DockPanel.Dock="Bottom"
-                Background="{DynamicResource MaterialDesignToolBarBackground}"
-                Padding="18,10">
-            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-                <TextBlock Grid.Column="0"
-                           Text="{Binding CurrentIdentityName}"
-                           VerticalAlignment="Center"
-                           FontSize="12"
-                           Foreground="{DynamicResource MaterialDesignBodyLight}" />
-                <TextBlock Grid.Column="2"
-                           Text="{Binding SyncStatus}"
-                           VerticalAlignment="Center"
-                           FontSize="12"
-                           Foreground="{DynamicResource MaterialDesignBodyLight}"
-                           Margin="16,0,0,0" />
-                <TextBlock Grid.Column="3"
-                           Text="{Binding LastSyncTime}"
-                           VerticalAlignment="Center"
-                           FontSize="12"
-                           Foreground="{DynamicResource MaterialDesignBodyLight}"
-                           Margin="16,0,0,0" />
-            </Grid>
-        </Border>
-
-        <!-- Main Content Area -->
-        <Grid>
-            <TabControl Name="MainTabControl"
-                        SelectedIndex="{Binding SelectedTabIndex}">
-
-                <!-- Home Tab -->
-                <TabItem Header="首页">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                  HorizontalScrollBarVisibility="Disabled">
-                        <tabViews:HomeTabView DataContext="{Binding HomeViewModel}" />
-                    </ScrollViewer>
-                </TabItem>
-
-                <!-- Bill Tab -->
-                <TabItem Header="账单">
-                    <tabViews:BillTabView DataContext="{Binding BillViewModel}" />
-                </TabItem>
-
-                <!-- Features Tab -->
-                <TabItem Header="功能大全">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                  HorizontalScrollBarVisibility="Disabled">
-                        <tabViews:FeaturesTabView DataContext="{Binding FeaturesViewModel}" />
-                    </ScrollViewer>
-                </TabItem>
-
-            </TabControl>
-        </Grid>
-    </DockPanel>
+        <!-- Floating Sync Status Panel — anchored to bottom-right -->
+        <components:SyncStatusPanel DataContext="{Binding SyncStatusVm}"
+                                    IsVisible="{Binding SyncStatusVm.IsVisible}"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Bottom"
+                                    Margin="20" />
+    </Panel>
 
 </Window>

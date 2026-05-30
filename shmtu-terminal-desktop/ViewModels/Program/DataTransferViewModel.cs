@@ -62,6 +62,16 @@ public class DataTransferViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _selectedExportScope, value);
     }
 
+    // Source type matching Rust: identity merged data vs account original data
+    public ObservableCollection<string> SourceTypes { get; } = ["身份合并数据", "账号原始数据"];
+
+    private string _selectedSourceType = "身份合并数据";
+    public string SelectedSourceType
+    {
+        get => _selectedSourceType;
+        set => this.RaiseAndSetIfChanged(ref _selectedSourceType, value);
+    }
+
     public ObservableCollection<string> IdentityList { get; } = [];
 
     private string _selectedExportIdentity = "";
@@ -233,40 +243,50 @@ public class DataTransferViewModel : ViewModelBase
 
         try
         {
-            var identityId = GetIdentityIdByName(SelectedExportIdentity);
-            if (identityId <= 0) return;
-
             var format = IsCsvFormat ? ExportFormat.Csv
                 : IsQianjiFormat ? ExportFormat.Qianji
                 : ExportFormat.Json;
 
-            long? startTs = null, endTs = null;
-            var now = DateTime.Now;
-            switch (SelectedExportScope)
-            {
-                case "本月数据":
-                    startTs = ((DateTimeOffset)new DateTime(now.Year, now.Month, 1)).ToUnixTimeSeconds();
-                    endTs = ((DateTimeOffset)now).ToUnixTimeSeconds();
-                    break;
-                case "近30天":
-                    startTs = ((DateTimeOffset)now.AddDays(-30)).ToUnixTimeSeconds();
-                    endTs = ((DateTimeOffset)now).ToUnixTimeSeconds();
-                    break;
-                case "近90天":
-                    startTs = ((DateTimeOffset)now.AddDays(-90)).ToUnixTimeSeconds();
-                    endTs = ((DateTimeOffset)now).ToUnixTimeSeconds();
-                    break;
-            }
-
             IsExportIndeterminate = false;
 
-            if (startTs.HasValue && endTs.HasValue)
+            if (SelectedSourceType == "账号原始数据")
             {
-                await BillExportService.ExportAsync(identityId, SelectedExportIdentity, format, ExportPath, startTs.Value, endTs.Value);
+                // Account-level original data export
+                await BillExportService.ExportAccountOriginalAsync(
+                    SelectedExportIdentity, format, ExportPath);
             }
             else
             {
-                await BillExportService.ExportAsync(identityId, SelectedExportIdentity, format, ExportPath);
+                // Identity-level merged data export
+                var identityId = GetIdentityIdByName(SelectedExportIdentity);
+                if (identityId <= 0) return;
+
+                long? startTs = null, endTs = null;
+                var now = DateTime.Now;
+                switch (SelectedExportScope)
+                {
+                    case "本月数据":
+                        startTs = ((DateTimeOffset)new DateTime(now.Year, now.Month, 1)).ToUnixTimeSeconds();
+                        endTs = ((DateTimeOffset)now).ToUnixTimeSeconds();
+                        break;
+                    case "近30天":
+                        startTs = ((DateTimeOffset)now.AddDays(-30)).ToUnixTimeSeconds();
+                        endTs = ((DateTimeOffset)now).ToUnixTimeSeconds();
+                        break;
+                    case "近90天":
+                        startTs = ((DateTimeOffset)now.AddDays(-90)).ToUnixTimeSeconds();
+                        endTs = ((DateTimeOffset)now).ToUnixTimeSeconds();
+                        break;
+                }
+
+                if (startTs.HasValue && endTs.HasValue)
+                {
+                    await BillExportService.ExportAsync(identityId, SelectedExportIdentity, format, ExportPath, startTs.Value, endTs.Value);
+                }
+                else
+                {
+                    await BillExportService.ExportAsync(identityId, SelectedExportIdentity, format, ExportPath);
+                }
             }
 
             ExportStatus = "导出完成!";

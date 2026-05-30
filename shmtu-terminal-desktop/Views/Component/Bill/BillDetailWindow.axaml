@@ -1,0 +1,179 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="560"
+        x:Class="shmtu.terminal.desktop.Views.Component.Bill.BillDetailWindow"
+        Title="账单详情"
+        Width="480" Height="560"
+        WindowStartupLocation="CenterScreen"
+        CanResize="False"
+        SizeToContent="Manual"
+        TransparencyLevelHint="AcrylicBlur">
+
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="24,20" Spacing="16">
+
+      <!-- Header -->
+      <TextBlock Text="账单详情"
+                 FontSize="18" FontWeight="SemiBold"
+                 HorizontalAlignment="Left" />
+
+      <!-- Detail Fields -->
+      <StackPanel Spacing="10">
+
+        <!-- Date/Time -->
+        <Grid ColumnDefinitions="120,*">
+          <TextBlock Grid.Column="0" Text="日期时间"
+                     FontSize="13" Foreground="Gray"
+                     HorizontalAlignment="Right" VerticalAlignment="Center"
+                     Margin="0,0,12,0" />
+          <TextBlock Grid.Column="1" Text="{Binding DateTimeFormatted}"
+                     FontSize="13" VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- Transaction Type -->
+        <Grid ColumnDefinitions="120,*">
+          <TextBlock Grid.Column="0" Text="交易类型"
+                     FontSize="13" Foreground="Gray"
+                     HorizontalAlignment="Right" VerticalAlignment="Center"
+                     Margin="0,0,12,0" />
+          <TextBlock Grid.Column="1" Text="{Binding ItemType}"
+                     FontSize="13" VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- Transaction Number -->
+        <Grid ColumnDefinitions="120,*">
+          <TextBlock Grid.Column="0" Text="交易号"
+                     FontSize="13" Foreground="Gray"
+                     HorizontalAlignment="Right" VerticalAlignment="Center"
+                     Margin="0,0,12,0" />
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+            <TextBlock Text="{Binding Number}"
+                       FontSize="13" VerticalAlignment="Center" />
+            <Button Content="复制"
+                    FontSize="10" Padding="4,1"
+                    Command="{Binding CopyFieldCommand}"
+                    CommandParameter="{Binding Number}"
+                    Classes="Flat" />
+          </StackPanel>
+        </Grid>
+
+        <!-- Counterparty -->
+        <Grid ColumnDefinitions="120,*">
+          <TextBlock Grid.Column="0" Text="对方账户"
+                     FontSize="13" Foreground="Gray"
+                     HorizontalAlignment="Right" VerticalAlignment="Center"
+                     Margin="0,0,12,0" />
+          <TextBlock Grid.Column="1" Text="{Binding TargetUser}"
+                     FontSize="13" VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- Amount -->
+        <Grid ColumnDefinitions="120,*">
+          <TextBlock Grid.Column="0" Text="金额"
+                     FontSize="13" Foreground="Gray"
+                     HorizontalAlignment="Right" VerticalAlignment="Center"
+                     Margin="0,0,12,0" />
+          <TextBlock Grid.Column="1" Text="{Binding MoneyStr}"
+                     FontSize="20" FontWeight="Bold"
+                     Foreground="{Binding MoneyColor}"
+                     VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- Payment Method -->
+        <Grid ColumnDefinitions="120,*">
+          <TextBlock Grid.Column="0" Text="支付方式"
+                     FontSize="13" Foreground="Gray"
+                     HorizontalAlignment="Right" VerticalAlignment="Center"
+                     Margin="0,0,12,0" />
+          <TextBlock Grid.Column="1" Text="{Binding Method}"
+                     FontSize="13" VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- Status -->
+        <Grid ColumnDefinitions="120,*">
+          <TextBlock Grid.Column="0" Text="状态"
+                     FontSize="13" Foreground="Gray"
+                     HorizontalAlignment="Right" VerticalAlignment="Center"
+                     Margin="0,0,12,0" />
+          <Border Grid.Column="1"
+                  Background="{Binding StatusBackground}"
+                  CornerRadius="4"
+                  Padding="8,3"
+                  HorizontalAlignment="Left"
+                  VerticalAlignment="Center">
+            <TextBlock Text="{Binding StatusStr}"
+                       FontSize="12" FontWeight="Medium"
+                       Foreground="{Binding StatusForeground}" />
+          </Border>
+        </Grid>
+
+        <!-- Classification -->
+        <Grid ColumnDefinitions="120,*">
+          <TextBlock Grid.Column="0" Text="分类"
+                     FontSize="13" Foreground="Gray"
+                     HorizontalAlignment="Right" VerticalAlignment="Center"
+                     Margin="0,0,12,0" />
+          <TextBlock Grid.Column="1" Text="{Binding ClassificationType}"
+                     FontSize="13" VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- Position -->
+        <Grid ColumnDefinitions="120,*">
+          <TextBlock Grid.Column="0" Text="位置"
+                     FontSize="13" Foreground="Gray"
+                     HorizontalAlignment="Right" VerticalAlignment="Center"
+                     Margin="0,0,12,0" />
+          <TextBlock Grid.Column="1" Text="{Binding Position}"
+                     FontSize="13" VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- Notes (editable) -->
+        <Grid ColumnDefinitions="120,*">
+          <TextBlock Grid.Column="0" Text="备注"
+                     FontSize="13" Foreground="Gray"
+                     HorizontalAlignment="Right" VerticalAlignment="Top"
+                     Margin="0,6,12,0" />
+          <TextBox Grid.Column="1"
+                   Text="{Binding Notes}"
+                   Watermark="添加备注..."
+                   FontSize="13"
+                   AcceptsReturn="False"
+                   MinHeight="32" MaxHeight="80" />
+        </Grid>
+
+      </StackPanel>
+
+      <!-- Merge Info (visible only for combined bills) -->
+      <Panel IsVisible="{Binding IsCombined}">
+        <Border Background="#F5F5F5" CornerRadius="6" Padding="12,8">
+          <StackPanel Spacing="4">
+            <TextBlock Text="合并信息" FontSize="13" FontWeight="SemiBold" />
+            <TextBlock FontSize="12" Foreground="Gray">
+              <Run Text="交易号列表: " />
+              <Run Text="{Binding NumberList}" />
+            </TextBlock>
+          </StackPanel>
+        </Border>
+      </Panel>
+
+      <!-- Action Buttons -->
+      <StackPanel Orientation="Horizontal"
+                  Spacing="8"
+                  HorizontalAlignment="Right"
+                  Margin="0,8,0,0">
+        <Button Content="保存备注"
+                Command="{Binding SaveNotesCommand}"
+                Classes="Primary" FontSize="13"
+                Width="100" />
+        <Button Content="关闭"
+                Command="{Binding CloseCommand}"
+                Classes="Flat" FontSize="13"
+                Width="80" />
+      </StackPanel>
+
+    </StackPanel>
+  </ScrollViewer>
+
+</Window>

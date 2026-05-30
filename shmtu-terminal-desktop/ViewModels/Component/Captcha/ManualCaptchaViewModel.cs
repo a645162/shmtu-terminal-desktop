@@ -12,6 +12,7 @@ public class CaptchaResult
     public string Expression { get; set; } = "";
     public string Answer { get; set; } = "";
     public bool Success { get; set; }
+    public bool IsRefresh { get; set; }
 }
 
 /// <summary>
@@ -67,7 +68,9 @@ public class ManualCaptchaViewModel : ViewModelBase
 
     public ReactiveCommand<Unit, Unit> CopyImageCommand { get; }
     public ReactiveCommand<Unit, Unit> ConfirmCommand { get; }
+    public ReactiveCommand<Unit, Unit> RefreshCommand { get; }
     public event Action? CloseRequested;
+    public event Action? RefreshRequested;
 
     /// <summary>
     /// Set when user confirms — caller awaits this
@@ -120,5 +123,24 @@ public class ManualCaptchaViewModel : ViewModelBase
             });
             CloseRequested?.Invoke();
         });
+
+        RefreshCommand = ReactiveCommand.Create(() =>
+        {
+            Tcs?.TrySetResult(new CaptchaResult
+            {
+                IsRefresh = true,
+                Success = false,
+            });
+            RefreshRequested?.Invoke();
+        });
+    }
+
+    /// <summary>
+    /// Set error message and clear input for retry
+    /// </summary>
+    public void SetError(string message)
+    {
+        ErrorMessage = message;
+        CaptchaAnswer = "";
     }
 }

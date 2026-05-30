@@ -70,13 +70,14 @@ public class NavigationService
                 "Settings" => new Views.Program.SettingsWindow(),
                 "About" => new Views.Program.AboutWindow(),
                 "DataTransfer" => new Views.Program.DataTransferWindow(),
+                "Statistics" => new Views.Program.StatisticsWindow(),
                 "CaptchaTest" => new Views.Program.CaptchaTestWindow(),
                 "IdentityManager" => new Views.User.IdentityManagerWindow(),
                 "IdentitySelect" => new Views.Startup.IdentitySelectWindow(),
                 "IdentityEdit" => new Views.User.IdentityEditWindow(),
                 "AccountEdit" => new Views.User.AccountEditWindow(),
-                "BillDetail" => new Views.Component.Captcha.ManualCaptchaWindow(),
-                "BillMerge" => new Views.Component.Captcha.ManualCaptchaWindow(),
+                "BillDetail" => new Views.Component.Bill.BillDetailWindow(),
+                "BillMerge" => new Views.Component.Bill.BillMergeWindow(),
                 _ => null,
             };
 

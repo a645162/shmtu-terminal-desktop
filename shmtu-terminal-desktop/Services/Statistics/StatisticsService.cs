@@ -27,6 +27,11 @@ public static class StatisticsService
     ];
 
     /// <summary>
+    /// Income keywords matching Rust's INCOME_KEYWORDS
+    /// </summary>
+    private static readonly string[] IncomeKeywords = ["充值", "冲正", "退款", "返还", "补偿"];
+
+    /// <summary>
     /// 获取统计汇总
     /// </summary>
     public static StatisticsSummary GetSummary(StatisticsParams @params)
@@ -35,22 +40,44 @@ public static class StatisticsService
             @params.IdentityId, @params.DateStart, @params.DateEnd);
 
         var bills = GetFilteredBills(@params);
-        var (expense, expenseCount) = CalculateExpense(bills);
-        var uniqueDates = bills.Select(b => b.DateStr).Distinct().Count();
+        double totalExpense = 0, totalIncome = 0;
+        int expenseCount = 0, incomeCount = 0;
+
+        foreach (var bill in bills)
+        {
+            if (bill.StatusStr != "交易成功") continue;
+
+            var money = Math.Abs(bill.Money ?? 0);
+            var isIncome = IsIncomeBill(bill);
+
+            if (isIncome)
+            {
+                totalIncome += money;
+                incomeCount++;
+            }
+            else
+            {
+                totalExpense += money;
+                expenseCount++;
+            }
+        }
+
+        var uniqueDates = bills.Where(b => b.StatusStr == "交易成功")
+            .Select(b => b.DateStr).Distinct().Count();
         var days = Math.Max(uniqueDates, 1);
 
         var result = new StatisticsSummary
         {
-            TotalExpense = Math.Abs(expense),
-            TotalIncome = 0,
-            NetExpense = Math.Abs(expense),
-            DailyAverage = Math.Abs(expense) / days,
+            TotalExpense = totalExpense,
+            TotalIncome = totalIncome,
+            NetExpense = totalExpense - totalIncome,
+            DailyAverage = totalExpense / days,
             ExpenseCount = expenseCount,
-            IncomeCount = 0,
+            IncomeCount = incomeCount,
         };
 
-        LoggingService.Information("[Statistics] GetSummary 完成 | Expense={Expense} | Days={Days} | DailyAvg={DailyAvg}",
-            result.TotalExpense, days, result.DailyAverage);
+        LoggingService.Information("[Statistics] GetSummary 完成 | Expense={Expense} | Income={Income} | Days={Days} | DailyAvg={DailyAvg}",
+            result.TotalExpense, result.TotalIncome, days, result.DailyAverage);
 
         return result;
     }
@@ -63,17 +90,27 @@ public static class StatisticsService
         LoggingService.Debug("[Statistics] GetDailyTrend | IdentityId={IdentityId}", @params.IdentityId);
 
         var bills = GetFilteredBills(@params);
-        var dailyMap = new Dictionary<string, double>();
+        var dailyMap = new Dictionary<string, (double Expense, double Income)>();
 
         foreach (var bill in bills)
         {
-            var money = bill.Money ?? 0;
+            if (bill.StatusStr != "交易成功") continue;
+
+            var money = Math.Abs(bill.Money ?? 0);
             var key = bill.DateStr;
+            var isIncome = IsIncomeBill(bill);
 
             if (dailyMap.TryGetValue(key, out var current))
-                dailyMap[key] = current + Math.Abs(money);
+            {
+                if (isIncome)
+                    dailyMap[key] = (current.Expense, current.Income + money);
+                else
+                    dailyMap[key] = (current.Expense + money, current.Income);
+            }
             else
-                dailyMap[key] = Math.Abs(money);
+            {
+                dailyMap[key] = isIncome ? (0, money) : (money, 0);
+            }
         }
 
         var result = dailyMap
@@ -81,8 +118,8 @@ public static class StatisticsService
             .Select(kvp => new DailyTrendItem
             {
                 Date = kvp.Key,
-                Expense = kvp.Value,
-                Income = 0,
+                Expense = kvp.Value.Expense,
+                Income = kvp.Value.Income,
             })
             .ToList();
 
@@ -291,6 +328,16 @@ public static class StatisticsService
 
     #region 私有辅助方法
 
+    /// <summary>
+    /// 判断账单是否为收入类型 — 匹配 Rust 的 INCOME_KEYWORDS
+    /// 仅统计 status_str == "交易成功" 的记录
+    /// </summary>
+    private static bool IsIncomeBill(BillMerged bill)
+    {
+        var text = $"{bill.ItemType} {bill.TargetUser}";
+        return IncomeKeywords.Any(kw => text.Contains(kw));
+    }
+
     private static List<BillMerged> GetFilteredBills(StatisticsParams @params)
     {
         var startTime = @params.DateStart != null ? ParseDateToTimestamp(@params.DateStart) : (long?)null;
@@ -326,23 +373,6 @@ public static class StatisticsService
 
         LoggingService.Warning("[Statistics] 日期解析失败，使用当前时间 | DateStr={DateStr}", dateStr);
         return DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-    }
-
-    private static (double Expense, int Count) CalculateExpense(List<BillMerged> bills)
-    {
-        double total = 0;
-        int count = 0;
-
-        foreach (var bill in bills)
-        {
-            if (bill.StatusStr == "交易成功")
-            {
-                total += Math.Abs(bill.Money ?? 0);
-                count++;
-            }
-        }
-
-        return (total, count);
     }
 
     #endregion

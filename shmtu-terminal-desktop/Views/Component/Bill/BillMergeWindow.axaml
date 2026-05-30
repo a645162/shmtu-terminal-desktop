@@ -1,0 +1,93 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="520" d:DesignHeight="480"
+        x:Class="shmtu.terminal.desktop.Views.Component.Bill.BillMergeWindow"
+        Title="合并账单"
+        Width="520" Height="480"
+        WindowStartupLocation="CenterScreen"
+        CanResize="False"
+        SizeToContent="Manual"
+        TransparencyLevelHint="AcrylicBlur">
+
+  <StackPanel Margin="24,20" Spacing="16">
+
+    <!-- Header -->
+    <TextBlock Text="合并账单"
+               FontSize="18" FontWeight="SemiBold"
+               HorizontalAlignment="Left" />
+
+    <!-- Primary Bill -->
+    <StackPanel Spacing="6">
+      <TextBlock Text="主账单：" FontSize="13" FontWeight="Medium" />
+      <Border Background="#F0F7FF" CornerRadius="6" Padding="12,8">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <CheckBox IsChecked="True" IsEnabled="False" />
+          <TextBlock FontSize="13" VerticalAlignment="Center">
+            <Run Text="{Binding PrimaryBill.DateTimeFormatted}" />
+            <Run Text=" " />
+            <Run Text="{Binding PrimaryBill.TargetUser}" />
+            <Run Text=" " />
+            <Run Text="{Binding PrimaryBill.MoneyStr}" />
+          </TextBlock>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+
+    <!-- Selectable Bills -->
+    <StackPanel Spacing="6">
+      <TextBlock Text="可合并的账单（同日同类型）："
+                 FontSize="13" FontWeight="Medium" />
+      <Border BorderBrush="#E0E0E0" BorderThickness="1"
+              CornerRadius="6" MaxHeight="220">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <ItemsControl ItemsSource="{Binding SelectableBills}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Padding="8,6"
+                        BorderBrush="#F0F0F0" BorderThickness="0,0,0,1">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <CheckBox IsChecked="{Binding IsSelectedForMerge}" />
+                    <TextBlock FontSize="13" VerticalAlignment="Center">
+                      <Run Text="{Binding DateTimeFormatted}" />
+                      <Run Text=" " />
+                      <Run Text="{Binding TargetUser}" />
+                      <Run Text=" " />
+                      <Run Text="{Binding MoneyStr}" />
+                    </TextBlock>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </Border>
+    </StackPanel>
+
+    <!-- Merge Note -->
+    <StackPanel Spacing="4">
+      <TextBlock Text="合并备注：" FontSize="13" />
+      <TextBox Text="{Binding MergeNote}"
+               Watermark="可选，输入合并备注..."
+               FontSize="13" />
+    </StackPanel>
+
+    <!-- Action Buttons -->
+    <StackPanel Orientation="Horizontal"
+                Spacing="8"
+                HorizontalAlignment="Right"
+                Margin="0,8,0,0">
+      <Button Content="确认合并"
+              Command="{Binding SaveCommand}"
+              Classes="Primary" FontSize="13"
+              Width="100" />
+      <Button Content="取消"
+              Command="{Binding CancelCommand}"
+              Classes="Flat" FontSize="13"
+              Width="80" />
+    </StackPanel>
+
+  </StackPanel>
+
+</Window>

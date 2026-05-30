@@ -414,6 +414,12 @@ public class BillSyncService
 
                 case LoginSubmitResult.ValidateCodeError:
                     LoggingService.Warning("[BillSync] 验证码错误，重试中... | AccountId={AccountId} | Attempt={Attempt}", accountId, attempt);
+                    OnProgressChanged(new SyncProgress
+                    {
+                        AccountId = accountId,
+                        Status = "captcha_error",
+                        ErrorMessage = "验证码错误，正在重试",
+                    });
                     continue;
 
                 case LoginSubmitResult.PasswordError:

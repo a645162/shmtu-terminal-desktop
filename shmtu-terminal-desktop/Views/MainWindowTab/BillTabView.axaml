@@ -119,12 +119,50 @@
         </ContextMenu>
       </DataGrid.ContextMenu>
       <DataGrid.Columns>
-        <DataGridTextColumn Header="日期时间" Binding="{Binding DateTimeFormatted}" Width="*" />
-        <DataGridTextColumn Header="交易名称" Binding="{Binding ItemType}" Width="*" />
-        <DataGridTextColumn Header="对方账户" Binding="{Binding TargetUser}" Width="*" />
-        <DataGridTextColumn Header="金额" Binding="{Binding MoneyStr}" Width="Auto" />
-        <DataGridTextColumn Header="支付方式" Binding="{Binding Method}" Width="Auto" />
-        <DataGridTextColumn Header="状态" Binding="{Binding StatusStr}" Width="Auto" />
+        <DataGridTextColumn Header="日期时间" Binding="{Binding DateTimeFormatted}" Width="160" />
+        <DataGridTextColumn Header="交易名称" Binding="{Binding ItemType}" Width="120" />
+        <DataGridTextColumn Header="对方账户" Binding="{Binding TargetUser}" Width="140" />
+        <DataGridTextColumn Header="位置" Binding="{Binding Position}" Width="120" />
+        <DataGridTemplateColumn Header="金额" Width="100">
+            <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding MoneyStr}"
+                               FontWeight="SemiBold"
+                               Foreground="{Binding MoneyColor}"
+                               VerticalAlignment="Center"
+                               Margin="8,0" />
+                </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+        <DataGridTextColumn Header="支付方式" Binding="{Binding Method}" Width="100" />
+        <DataGridTemplateColumn Header="状态" Width="80">
+            <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate>
+                    <Border Background="{Binding StatusBackground}"
+                            CornerRadius="10"
+                            Padding="8,2"
+                            HorizontalAlignment="Center">
+                        <TextBlock Text="{Binding StatusStr}"
+                                   FontSize="11"
+                                   Foreground="{Binding StatusForeground}"
+                                   HorizontalAlignment="Center" />
+                    </Border>
+                </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+        <DataGridTemplateColumn Header="" Width="40">
+            <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate>
+                    <Button Content="&#xE712;"
+                            FontFamily="Segoe MDL2 Assets"
+                            FontSize="12"
+                            Classes="Flat"
+                            Padding="4"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center" />
+                </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
       </DataGrid.Columns>
     </DataGrid>
 

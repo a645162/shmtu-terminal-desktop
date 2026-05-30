@@ -55,6 +55,16 @@
                                           MinWidth="180" />
                             </DockPanel>
 
+                            <DockPanel>
+                                <TextBlock Text="数据类型"
+                                           VerticalAlignment="Center"
+                                           DockPanel.Dock="Left" />
+                                <ComboBox ItemsSource="{Binding SourceTypes}"
+                                          SelectedItem="{Binding SelectedSourceType}"
+                                          HorizontalAlignment="Right"
+                                          MinWidth="180" />
+                            </DockPanel>
+
                             <TextBlock Text="导出格式"
                                        FontSize="12"
                                        Foreground="{DynamicResource MaterialDesignBodyLight}" />

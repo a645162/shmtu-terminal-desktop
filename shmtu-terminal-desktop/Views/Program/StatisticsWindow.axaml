@@ -1,0 +1,219 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:appControls="using:shmtu.terminal.desktop.Controls"
+        xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.Avalonia;assembly=LiveChartsCore.SkiaSharpView.Avalonia"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+        x:Class="shmtu.terminal.desktop.Views.Program.StatisticsWindow"
+        Title="统计分析"
+        Width="800" Height="600"
+        WindowStartupLocation="CenterOwner"
+        MinWidth="640" MinHeight="500"
+        TransparencyLevelHint="AcrylicBlur">
+
+    <DockPanel>
+
+        <!-- Filter Bar at Top -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource MaterialDesignCardBackground}"
+                CornerRadius="8,8,0,0"
+                Padding="16,10"
+                Margin="0"
+                BoxShadow="0 1 3 0 #1F000000">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <ComboBox ItemsSource="{Binding IdentityList}"
+                              SelectedItem="{Binding SelectedIdentity}"
+                              MinWidth="120"
+                              VerticalAlignment="Center" />
+                    <ComboBox ItemsSource="{Binding DateRangePresets}"
+                              SelectedItem="{Binding SelectedDateRange}"
+                              MinWidth="100"
+                              VerticalAlignment="Center" />
+                </StackPanel>
+                <Button Content="刷新"
+                        Command="{Binding RefreshCommand}"
+                        Classes="Primary"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center" />
+            </DockPanel>
+        </Border>
+
+        <!-- Tab Content -->
+        <TabControl SelectedIndex="{Binding SelectedTabIndex}"
+                    Margin="0">
+
+            <!-- Overview Tab -->
+            <TabItem Header="总览">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,12">
+                    <StackPanel Spacing="16">
+
+                        <!-- Summary Cards -->
+                        <UniformGrid Rows="1" Columns="4">
+                            <appControls:Card Margin="0,0,6,0" Padding="14">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="总支出" FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                                    <TextBlock Text="{Binding TotalExpense}" FontSize="22" FontWeight="Bold" Foreground="#E86452" />
+                                    <TextBlock FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0} 笔交易">
+                                                <Binding Path="ExpenseCount" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </StackPanel>
+                            </appControls:Card>
+                            <appControls:Card Margin="6,0,6,0" Padding="14">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="总收入" FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                                    <TextBlock Text="{Binding TotalIncome}" FontSize="22" FontWeight="Bold" Foreground="#1A8F5A" />
+                                    <TextBlock FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0} 笔交易">
+                                                <Binding Path="IncomeCount" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </StackPanel>
+                            </appControls:Card>
+                            <appControls:Card Margin="6,0,6,0" Padding="14">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="净支出" FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                                    <TextBlock Text="{Binding NetExpense}" FontSize="22" FontWeight="Bold" Foreground="#0F6CBD" />
+                                </StackPanel>
+                            </appControls:Card>
+                            <appControls:Card Margin="6,0,0,0" Padding="14">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="日均消费" FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                                    <TextBlock Text="{Binding DailyAverage}" FontSize="22" FontWeight="Bold" Foreground="#945FB9" />
+                                </StackPanel>
+                            </appControls:Card>
+                        </UniformGrid>
+
+                        <!-- Daily Trend Chart - LiveCharts2 CartesianChart -->
+                        <appControls:Card Padding="16">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="每日消费趋势" FontSize="14" FontWeight="SemiBold" />
+                                <lvc:CartesianChart
+                                    Series="{Binding DailySeries}"
+                                    XAxes="{Binding DailyXAxes}"
+                                    YAxes="{Binding DailyYAxes}"
+                                    Height="220" />
+                            </StackPanel>
+                        </appControls:Card>
+
+                        <!-- Two column: Meal Distribution + Consumption Distribution -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <!-- Meal Distribution -->
+                            <appControls:Card Grid.Column="0" Padding="16">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="用餐时段分布" FontSize="14" FontWeight="SemiBold" />
+                                    <lvc:CartesianChart
+                                        Series="{Binding MealSeries}"
+                                        XAxes="{Binding MealXAxes}"
+                                        YAxes="{Binding MealYAxes}"
+                                        Height="200" />
+                                </StackPanel>
+                            </appControls:Card>
+
+                            <!-- Consumption Distribution -->
+                            <appControls:Card Grid.Column="1" Padding="16">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="消费金额分布" FontSize="14" FontWeight="SemiBold" />
+                                    <lvc:CartesianChart
+                                        Series="{Binding ConsumptionSeries}"
+                                        XAxes="{Binding ConsumptionXAxes}"
+                                        YAxes="{Binding ConsumptionYAxes}"
+                                        Height="200" />
+                                </StackPanel>
+                            </appControls:Card>
+                        </Grid>
+
+                        <!-- Merchant Ranking - LiveCharts2 horizontal bar -->
+                        <appControls:Card Padding="16">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="商户消费排行" FontSize="14" FontWeight="SemiBold" />
+                                <lvc:CartesianChart
+                                    Series="{Binding MerchantSeries}"
+                                    XAxes="{Binding MerchantXAxes}"
+                                    YAxes="{Binding MerchantYAxes}"
+                                    Height="260" />
+                            </StackPanel>
+                        </appControls:Card>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Category Tab -->
+            <TabItem Header="分类">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,12">
+                    <StackPanel Spacing="16">
+
+                        <!-- Category Bar Chart - LiveCharts2 horizontal bar -->
+                        <appControls:Card Padding="16">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="消费分类排行" FontSize="14" FontWeight="SemiBold" />
+                                <lvc:CartesianChart
+                                    Series="{Binding CategorySeries}"
+                                    XAxes="{Binding CategoryXAxes}"
+                                    YAxes="{Binding CategoryYAxes}"
+                                    Height="360" />
+                            </StackPanel>
+                        </appControls:Card>
+
+                        <!-- Category Pie Chart - LiveCharts2 PieChart -->
+                        <appControls:Card Padding="16">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="分类占比" FontSize="14" FontWeight="SemiBold" />
+                                <lvc:PieChart
+                                    Series="{Binding CategoryPieSeries}"
+                                    Height="300" />
+                            </StackPanel>
+                        </appControls:Card>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Position Tab -->
+            <TabItem Header="位置">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,12">
+                    <StackPanel Spacing="16">
+                        <appControls:Card Padding="16">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="商户消费排行" FontSize="14" FontWeight="SemiBold" />
+                                <lvc:CartesianChart
+                                    Series="{Binding MerchantSeries}"
+                                    XAxes="{Binding MerchantXAxes}"
+                                    YAxes="{Binding MerchantYAxes}"
+                                    Height="400" />
+                            </StackPanel>
+                        </appControls:Card>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Compare Tab -->
+            <TabItem Header="月度对比">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,12">
+                    <StackPanel Spacing="16">
+                        <appControls:Card Padding="16">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="月度消费对比" FontSize="14" FontWeight="SemiBold" />
+                                <lvc:CartesianChart
+                                    Series="{Binding MonthCompareSeries}"
+                                    XAxes="{Binding MonthCompareXAxes}"
+                                    YAxes="{Binding MonthCompareYAxes}"
+                                    Height="300" />
+                            </StackPanel>
+                        </appControls:Card>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+        </TabControl>
+    </DockPanel>
+
+</Window>

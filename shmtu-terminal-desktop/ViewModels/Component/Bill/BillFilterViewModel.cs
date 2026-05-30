@@ -17,7 +17,7 @@ public class BillFilterViewModel : ViewModelBase
     }
 
     public ObservableCollection<string> BillTypes { get; } =
-        ["全部", "充值", "消费", "电费", "洗澡", "热水", "食堂", "蛋糕", "其他"];
+        ["全部", "交易成功", "交易失败", "待支付"];
 
     private string _selectedBillType = "全部";
     public string SelectedBillType
@@ -27,9 +27,9 @@ public class BillFilterViewModel : ViewModelBase
     }
 
     public ObservableCollection<string> TimeRanges { get; } =
-        ["全部", "今天", "近7天", "近30天", "本月", "自定义"];
+        ["全部时间", "今天", "近7天", "本周", "本月", "近30天", "本季度", "近半年", "本年", "自定义"];
 
-    private string _selectedTimeRange = "全部";
+    private string _selectedTimeRange = "全部时间";
     public string SelectedTimeRange
     {
         get => _selectedTimeRange;
@@ -101,12 +101,31 @@ public class BillFilterViewModel : ViewModelBase
                 startTs = ((DateTimeOffset)today.AddDays(-7)).ToUnixTimeSeconds();
                 endTs = ((DateTimeOffset)today.AddDays(1)).ToUnixTimeSeconds();
                 break;
-            case "近30天":
-                startTs = ((DateTimeOffset)today.AddDays(-30)).ToUnixTimeSeconds();
+            case "本周":
+                var dayOfWeek = (int)today.DayOfWeek;
+                var monday = today.AddDays(-(dayOfWeek == 0 ? 6 : dayOfWeek - 1));
+                startTs = ((DateTimeOffset)monday).ToUnixTimeSeconds();
                 endTs = ((DateTimeOffset)today.AddDays(1)).ToUnixTimeSeconds();
                 break;
             case "本月":
                 startTs = ((DateTimeOffset)new DateTime(now.Year, now.Month, 1)).ToUnixTimeSeconds();
+                endTs = ((DateTimeOffset)today.AddDays(1)).ToUnixTimeSeconds();
+                break;
+            case "近30天":
+                startTs = ((DateTimeOffset)today.AddDays(-30)).ToUnixTimeSeconds();
+                endTs = ((DateTimeOffset)today.AddDays(1)).ToUnixTimeSeconds();
+                break;
+            case "本季度":
+                var quarterStart = new DateTime(now.Year, ((now.Month - 1) / 3) * 3 + 1, 1);
+                startTs = ((DateTimeOffset)quarterStart).ToUnixTimeSeconds();
+                endTs = ((DateTimeOffset)today.AddDays(1)).ToUnixTimeSeconds();
+                break;
+            case "近半年":
+                startTs = ((DateTimeOffset)today.AddDays(-183)).ToUnixTimeSeconds();
+                endTs = ((DateTimeOffset)today.AddDays(1)).ToUnixTimeSeconds();
+                break;
+            case "本年":
+                startTs = ((DateTimeOffset)new DateTime(now.Year, 1, 1)).ToUnixTimeSeconds();
                 endTs = ((DateTimeOffset)today.AddDays(1)).ToUnixTimeSeconds();
                 break;
             case "自定义":

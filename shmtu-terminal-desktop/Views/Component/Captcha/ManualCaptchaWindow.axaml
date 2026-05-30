@@ -18,12 +18,19 @@
                FontSize="14" FontWeight="Medium"
                HorizontalAlignment="Center" />
 
-    <!-- Captcha Image -->
-    <appControls:Card Padding="4" HorizontalAlignment="Center">
-      <Image Source="{Binding CaptchaImage}"
-             Width="240" Height="80"
-             Stretch="Uniform" />
-    </appControls:Card>
+    <!-- Captcha Image with Refresh -->
+    <StackPanel Orientation="Vertical" Spacing="4" HorizontalAlignment="Center">
+      <appControls:Card Padding="4" HorizontalAlignment="Center">
+        <Image Source="{Binding CaptchaImage}"
+               Width="240" Height="80"
+               Stretch="Uniform" />
+      </appControls:Card>
+      <Button Content="&#x1F504; 刷新验证码"
+              Command="{Binding RefreshCommand}"
+              FontSize="11"
+              HorizontalAlignment="Center"
+              Classes="Flat" />
+    </StackPanel>
 
     <!-- Expression hint -->
     <TextBlock Text="{Binding CaptchaExpression}"
