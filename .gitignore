@@ -583,3 +583,7 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 
 !/Lib
+
+# VitePress docs build output
+Documents/docs/.vitepress/dist/
+Documents/docs/.vitepress/cache/

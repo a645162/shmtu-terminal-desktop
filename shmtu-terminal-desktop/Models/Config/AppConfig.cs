@@ -28,10 +28,11 @@ public class IdentityConfig
 
 public class CaptchaConfig
 {
-    /// <summary>manual / remote_ocr / local_onnx</summary>
+    /// <summary>manual / remote_ocr / remote_ocr_http / local_onnx</summary>
     public string Mode { get; set; } = "manual";
     public string RemoteOcrHost { get; set; } = "";
     public int RemoteOcrPort { get; set; } = 0;
+    public string RemoteOcrHttpUrl { get; set; } = "http://127.0.0.1:5000";
     public string OnnxModelPath { get; set; } = "";
     public int OcrRetryCount { get; set; } = 3;
 }

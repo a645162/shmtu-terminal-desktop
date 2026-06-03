@@ -159,7 +159,12 @@ public class NavigationService
             return null;
         }
 
-        var options = new FilePickerSaveOptions { Title = title, SuggestedFileName = defaultFileName };
+        var options = new FilePickerSaveOptions
+        {
+            Title = title,
+            SuggestedFileName = defaultFileName,
+            FileTypeFilter = filters != null ? ConvertFilters(filters) : null,
+        };
         var result = await _mainWindow.StorageProvider.SaveFilePickerAsync(options);
 
         if (result != null)
@@ -188,13 +193,29 @@ public class NavigationService
             return [];
         }
 
-        var options = new FilePickerOpenOptions { Title = title, AllowMultiple = allowMultiple };
+        var options = new FilePickerOpenOptions
+        {
+            Title = title,
+            AllowMultiple = allowMultiple,
+            FileTypeFilter = filters != null ? ConvertFilters(filters) : null,
+        };
         var result = await _mainWindow.StorageProvider.OpenFilePickerAsync(options);
 
         var paths = result.Select(r => r.Path.LocalPath).ToArray();
         LoggingService.Information("[Navigation] 已选择 {Count} 个文件", paths.Length);
 
         return paths;
+    }
+
+    /// <summary>
+    /// 将扩展名数组转换为 Avalonia FilePickerFileType 列表
+    /// </summary>
+    private static List<FilePickerFileType> ConvertFilters(string[] filters)
+    {
+        return filters.Select(ext => new FilePickerFileType($"{ext.ToUpper()} 文件")
+        {
+            Patterns = [$"*.{ext}"],
+        }).ToList();
     }
 
     /// <summary>

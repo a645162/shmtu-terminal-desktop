@@ -113,7 +113,7 @@
                                 <!-- Remote OCR Settings -->
                                 <Panel IsVisible="{Binding IsRemoteOcrSelected}">
                                     <StackPanel Spacing="8" Margin="0,8,0,0">
-                                        <TextBlock Text="OCR 服务器配置"
+                                        <TextBlock Text="OCR 服务器配置 (旧版 TCP)"
                                                    FontSize="12"
                                                    Foreground="{DynamicResource MaterialDesignBodyLight}" />
                                         <StackPanel Orientation="Horizontal" Spacing="8">
@@ -124,6 +124,19 @@
                                                      Text="{Binding OcrPort}"
                                                      Width="80" />
                                         </StackPanel>
+                                    </StackPanel>
+                                </Panel>
+
+                                <!-- Remote OCR HTTP Settings -->
+                                <Panel IsVisible="{Binding IsRemoteOcrHttpSelected}">
+                                    <StackPanel Spacing="8" Margin="0,8,0,0">
+                                        <TextBlock Text="OCR 服务器地址 (RESTful HTTP)"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource MaterialDesignBodyLight}" />
+                                        <TextBox PlaceholderText="http://127.0.0.1:5000"
+                                                 Text="{Binding RemoteOcrHttpUrl}"
+                                                 Width="350"
+                                                 HorizontalAlignment="Left" />
                                     </StackPanel>
                                 </Panel>
 

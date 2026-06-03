@@ -64,7 +64,7 @@ public class SettingsViewModel : ViewModelBase
     public ReactiveCommand<Unit, Unit> SetPasswordCommand { get; }
 
     // Captcha Settings
-    public ObservableCollection<string> CaptchaModes { get; } = ["手动输入", "远程OCR", "本地ONNX"];
+    public ObservableCollection<string> CaptchaModes { get; } = ["手动输入", "远程OCR(旧)", "远程OCR(RESTful)", "本地ONNX"];
 
     private string _selectedCaptchaMode = "手动输入";
     public string SelectedCaptchaMode
@@ -74,11 +74,13 @@ public class SettingsViewModel : ViewModelBase
         {
             this.RaiseAndSetIfChanged(ref _selectedCaptchaMode, value);
             this.RaisePropertyChanged(nameof(IsRemoteOcrSelected));
+            this.RaisePropertyChanged(nameof(IsRemoteOcrHttpSelected));
             this.RaisePropertyChanged(nameof(IsLocalOnnxSelected));
         }
     }
 
-    public bool IsRemoteOcrSelected => SelectedCaptchaMode == "远程OCR";
+    public bool IsRemoteOcrSelected => SelectedCaptchaMode == "远程OCR(旧)";
+    public bool IsRemoteOcrHttpSelected => SelectedCaptchaMode == "远程OCR(RESTful)";
     public bool IsLocalOnnxSelected => SelectedCaptchaMode == "本地ONNX";
 
     private string _ocrHost = "";
@@ -93,6 +95,13 @@ public class SettingsViewModel : ViewModelBase
     {
         get => _ocrPort;
         set => this.RaiseAndSetIfChanged(ref _ocrPort, value);
+    }
+
+    private string _remoteOcrHttpUrl = "http://127.0.0.1:5000";
+    public string RemoteOcrHttpUrl
+    {
+        get => _remoteOcrHttpUrl;
+        set => this.RaiseAndSetIfChanged(ref _remoteOcrHttpUrl, value);
     }
 
     private string _onnxModelPath = "";
@@ -307,12 +316,14 @@ public class SettingsViewModel : ViewModelBase
         // Captcha
         SelectedCaptchaMode = config.Captcha.Mode switch
         {
-            "remote_ocr" => "远程OCR",
+            "remote_ocr" => "远程OCR(旧)",
+            "remote_ocr_http" => "远程OCR(RESTful)",
             "local_onnx" => "本地ONNX",
             _ => "手动输入",
         };
         OcrHost = config.Captcha.RemoteOcrHost;
         OcrPort = config.Captcha.RemoteOcrPort > 0 ? config.Captcha.RemoteOcrPort.ToString() : "";
+        RemoteOcrHttpUrl = config.Captcha.RemoteOcrHttpUrl;
         OnnxModelPath = config.Captcha.OnnxModelPath;
         OcrRetryCount = config.Captcha.OcrRetryCount;
 
@@ -350,6 +361,7 @@ public class SettingsViewModel : ViewModelBase
         SelectedCaptchaMode = "手动输入";
         OcrHost = "";
         OcrPort = "";
+        RemoteOcrHttpUrl = "http://127.0.0.1:5000";
         OnnxModelPath = "";
         OcrRetryCount = 3;
         MaxSyncPages = 100;
@@ -379,12 +391,14 @@ public class SettingsViewModel : ViewModelBase
             // Captcha
             config.Captcha.Mode = SelectedCaptchaMode switch
             {
-                "远程OCR" => "remote_ocr",
+                "远程OCR(旧)" => "remote_ocr",
+                "远程OCR(RESTful)" => "remote_ocr_http",
                 "本地ONNX" => "local_onnx",
                 _ => "manual",
             };
             config.Captcha.RemoteOcrHost = OcrHost;
             config.Captcha.RemoteOcrPort = int.TryParse(OcrPort, out var port) ? port : 0;
+            config.Captcha.RemoteOcrHttpUrl = RemoteOcrHttpUrl;
             config.Captcha.OnnxModelPath = OnnxModelPath;
             config.Captcha.OcrRetryCount = OcrRetryCount;
 

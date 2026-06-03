@@ -175,6 +175,10 @@ public class MainWindowViewModel : ViewModelBase
                 config.Captcha.RemoteOcrHost,
                 config.Captcha.RemoteOcrPort > 0 ? config.Captcha.RemoteOcrPort : 21601),
 
+            "remote_ocr_http" => new RemoteOcrHttpCaptchaResolver(
+                config.Captcha.RemoteOcrHttpUrl,
+                config.Captcha.OcrRetryCount > 0 ? config.Captcha.OcrRetryCount : 3),
+
             "local_onnx" => new ManualCaptchaResolver(async (imageData, ct) =>
                 await ShowManualCaptchaDialogAsync(imageData, ct)),
 
